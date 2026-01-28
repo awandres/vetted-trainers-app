@@ -1,0 +1,101 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db, vtMembers, vtPrescriptions, vtPrescriptionExercises, vtExercises, vtTrainers, eq } from "@vt/db";
+import { auth } from "@vt/auth";
+import { headers } from "next/headers";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Get current session
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Find member linked to this user's email
+    const [member] = await db
+      .select({ id: vtMembers.id })
+      .from(vtMembers)
+      .where(eq(vtMembers.email, session.user.email));
+
+    if (!member) {
+      return NextResponse.json({ error: "No member profile found" }, { status: 404 });
+    }
+
+    // Get the prescription (verify it belongs to this member)
+    const [prescription] = await db
+      .select({
+        id: vtPrescriptions.id,
+        name: vtPrescriptions.name,
+        notes: vtPrescriptions.notes,
+        status: vtPrescriptions.status,
+        sentAt: vtPrescriptions.sentAt,
+        viewedAt: vtPrescriptions.viewedAt,
+        createdAt: vtPrescriptions.createdAt,
+        memberId: vtPrescriptions.memberId,
+        trainerName: vtTrainers.name,
+      })
+      .from(vtPrescriptions)
+      .leftJoin(vtTrainers, eq(vtPrescriptions.prescribedByTrainerId, vtTrainers.id))
+      .where(eq(vtPrescriptions.id, id));
+
+    if (!prescription) {
+      return NextResponse.json({ error: "Prescription not found" }, { status: 404 });
+    }
+
+    // Verify ownership
+    if (prescription.memberId !== member.id) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Get exercises with full details
+    const exercises = await db
+      .select({
+        id: vtExercises.id,
+        name: vtExercises.name,
+        category: vtExercises.category,
+        bodyArea: vtExercises.bodyArea,
+        description: vtExercises.description,
+        cues: vtExercises.cues,
+        videoUrl: vtExercises.videoUrl,
+        thumbnailUrl: vtExercises.thumbnailUrl,
+        sets: vtPrescriptionExercises.sets,
+        reps: vtPrescriptionExercises.reps,
+        duration: vtPrescriptionExercises.duration,
+        exerciseNotes: vtPrescriptionExercises.notes,
+        orderIndex: vtPrescriptionExercises.orderIndex,
+      })
+      .from(vtPrescriptionExercises)
+      .innerJoin(vtExercises, eq(vtPrescriptionExercises.exerciseId, vtExercises.id))
+      .where(eq(vtPrescriptionExercises.prescriptionId, id))
+      .orderBy(vtPrescriptionExercises.orderIndex);
+
+    // Mark as viewed if not already
+    if (prescription.status === "sent") {
+      await db
+        .update(vtPrescriptions)
+        .set({
+          status: "viewed",
+          viewedAt: new Date(),
+        })
+        .where(eq(vtPrescriptions.id, id));
+    }
+
+    return NextResponse.json({
+      prescription: {
+        ...prescription,
+        exercises,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching prescription:", error);
+    return NextResponse.json({ error: "Failed to fetch prescription" }, { status: 500 });
+  }
+}

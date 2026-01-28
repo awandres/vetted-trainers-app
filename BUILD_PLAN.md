@@ -11,7 +11,7 @@ This document outlines the implementation plan for the remaining features of the
 | 1 | Trainer Dashboard | 2-3 sessions | ✅ Complete |
 | 2 | Enhanced Prescription Builder | 2-3 sessions | ✅ Complete |
 | 3 | Marketing Email Module | 3-4 sessions | ✅ Complete |
-| 4 | Client Portal (Future) | 2-3 sessions | 🔲 Not Started |
+| 4 | Client Portal | 2-3 sessions | ✅ Complete |
 
 ---
 
@@ -196,37 +196,50 @@ This document outlines the implementation plan for the remaining features of the
 
 ---
 
-## Phase 4: Client Portal (Future) 📱
+## Phase 4: Client Portal 📱 ✅
 
 **Goal:** A member-facing portal where clients can view their prescriptions, upcoming sessions, and communicate with their trainer.
 
-### 4.1 Client Authentication
-- [ ] Enable member login via `@vt/auth`
-- [ ] Link user accounts to member records
-- [ ] Client-specific session handling
+### 4.1 Client Authentication ✅
+- [x] AuthProvider context for client app
+- [x] Login page with email/password
+- [x] Session management via `@vt/auth`
+- [x] Link user accounts to member records (via email)
+- [x] Protected routes with redirect to login
+- [x] Sign out functionality
 
-### 4.2 Client Dashboard
-- [ ] Welcome message with trainer info
-- [ ] Upcoming sessions
-- [ ] Current prescription/workout plan
-- [ ] Quick actions
+### 4.2 Client Dashboard ✅
+- [x] Personalized welcome message with name
+- [x] Stats cards: sessions, prescriptions, trainer info
+- [x] Recent prescriptions list with "New" badge
+- [x] Recent sessions list
+- [x] Quick action cards (Exercises, Sessions, Progress)
 
-### 4.3 My Prescriptions
-- [ ] List of assigned prescriptions
-- [ ] Exercise detail view with videos
-- [ ] Mark workout as completed
-- [ ] Log notes/feedback
+### 4.3 My Prescriptions ✅
+- [x] `/prescriptions` - List of assigned prescriptions
+- [x] `/prescriptions/[id]` - Exercise detail view
+- [x] Embedded YouTube videos for exercises
+- [x] Coaching cues and descriptions
+- [x] Sets/reps/duration display
+- [x] Trainer notes per exercise
+- [x] Expand/collapse all functionality
+- [x] Auto-mark as "viewed" on open
 
-### 4.4 Session History
-- [ ] Past sessions list
-- [ ] Session details and notes
+### 4.4 Session History ✅
+- [x] `/sessions` - Past sessions list
+- [x] Stats: this month, total, last session
+- [x] Sessions grouped by month
+- [x] Session type and trainer display
+- [x] Session notes display
 
-### 4.5 Progress Tracking (Optional)
-- [ ] Weight/measurement logging
-- [ ] Progress photos (secure upload)
-- [ ] Charts/trends
+### 4.5 Progress Tracking ✅
+- [x] `/progress` - Progress dashboard
+- [x] Stats overview (total sessions, monthly, activity score)
+- [x] Monthly goal progress bar
+- [x] Achievement badges system
+- [x] Unlockable achievements based on activity
 
-### 4.6 Messaging (Optional)
+### 4.6 Messaging (Future)
 - [ ] Simple message thread with trainer
 - [ ] Notifications
 
