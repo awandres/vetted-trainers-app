@@ -30,8 +30,27 @@ vetted-trainers-app/
 - **Payroll Calculator** - Track trainer compensation by period
 - **Contracts** - Member contract management with alerts
 - **Financials** - YTD revenue charts and expense tracking
-- **Exercises Library** - Browse and manage exercise database
-- **Prescriptions** - Manage workout prescriptions for members
+- **Exercises Library** - Browse and manage exercise database with filters
+- **Prescriptions** - Visual workout builder with templates
+
+### Trainer Dashboard (`/` for trainer role)
+- **My Clients** - View assigned clients with status indicators
+- **My Sessions** - Week view of upcoming sessions with stats
+- **Tasks & Reminders** - Auto-generated client follow-up reminders
+- **My Payroll** - Personal earnings summary and history
+
+### Prescription Builder (`/prescriptions/new`)
+- **Visual Builder** - Drag-and-drop exercise selection
+- **Workout Templates** - Save and reuse prescription templates
+- **Set/Rep Configuration** - Customize sets, reps, duration per exercise
+- **Client Delivery** - Send prescriptions directly to clients
+
+### Marketing Module (`/marketing`)
+- **Campaign Builder** - Create email campaigns with templates
+- **Template Types** - Newsletter, Promotion, and Reminder templates
+- **Audience Segmentation** - Target by Active, Inactive, New, or Churned
+- **Scheduled Campaigns** - Schedule emails for future delivery
+- **Campaign Analytics** - Track opens, clicks, bounces
 
 ### Website CMS (`/website`)
 - **WYSIWYG Editor** - Rich text editing with Tiptap
@@ -39,6 +58,12 @@ vetted-trainers-app/
 - **Draft/Publish System** - Stage changes before going live
 - **Image Upload** - Cloudflare R2 integration for media
 - **One-Click Publish** - Deploys changes to live site via Vercel
+
+### Client Portal (`apps/client/` - port 3002)
+- **Member Dashboard** - Personalized welcome with stats
+- **My Prescriptions** - View assigned workouts with videos
+- **Session History** - Past sessions grouped by month
+- **Progress Tracking** - Achievements and activity stats
 
 ### Public Website (`apps/website/`)
 - **Home** - Hero section, services overview, testimonials, Google reviews
@@ -163,6 +188,13 @@ R2_PUBLIC_URL=""
 
 # Vercel Deploy Hook (for publishing website changes)
 VERCEL_DEPLOY_HOOK_URL="https://api.vercel.com/v1/integrations/deploy/prj_xxxxx/xxxxxxxx"
+
+# Email (Resend)
+RESEND_API_KEY="re_xxxxxxxxxxxx"
+EMAIL_FROM="Vetted Trainers <noreply@yourdomain.com>"
+
+# Cron Security (optional - for Vercel Cron)
+CRON_SECRET="your-cron-secret"
 ```
 
 ### Setting Up Vercel Deploy Hook
@@ -210,8 +242,9 @@ pnpm seed         # Import data from CSV files
 - **UI Components**: shadcn/ui + Tailwind CSS
 - **Charts**: Tremor + Recharts
 - **Rich Text Editor**: Tiptap
+- **Email**: Resend + React Email
 - **File Storage**: Cloudflare R2
-- **Deployment**: Vercel
+- **Deployment**: Vercel (with Cron support)
 
 ## 📁 Key Files
 
@@ -254,21 +287,26 @@ pnpm seed         # Import data from CSV files
 ### High Priority
 - [ ] **Configure R2** - Set up Cloudflare R2 for image uploads (see `R2_SETUP.md`)
 - [ ] **Deploy to Vercel** - Configure production environment variables
-- [ ] **Set up authentication** - Enable Better Auth for admin login
-
-### Medium Priority
-- [ ] **Build Client Portal** - Member-facing features in `apps/client`
-  - [ ] View assigned exercises and prescriptions
-  - [ ] Track workout history
-  - [ ] Schedule sessions with trainers
 - [ ] **Add member CRUD** - Create/edit/delete members in admin
 - [ ] **Add trainer CRUD** - Create/edit/delete trainers in admin
-- [ ] **Version History UI** - Show version timeline in CMS
+
+### Medium Priority
+- [ ] **Version History UI** - Show version timeline in CMS with restore button
+- [ ] **Task board (Kanban)** - Visual task management for admins
+- [ ] **Trainer-client messaging** - Simple chat thread between trainer and client
+- [ ] **Mobile optimization** - Responsive design improvements
 
 ### Low Priority
-- [ ] **Email notifications** - Session reminders, welcome emails
-- [ ] **Analytics dashboard** - Business metrics and reporting
-- [ ] **Mobile responsiveness** - Test and optimize for mobile devices
+- [ ] **Advanced analytics** - Additional business metrics and reporting
+- [ ] **Progress photo uploads** - Client-submitted progress photos
+- [ ] **Automated reminders** - Session reminders and follow-up notifications
+
+### ✅ Recently Completed
+- [x] **Trainer Dashboard** - Role-based dashboard with my clients, sessions, tasks
+- [x] **Prescription Builder** - Visual workout builder with templates
+- [x] **Marketing Module** - Email campaigns with scheduling and analytics
+- [x] **Client Portal** - Member login, prescriptions, sessions, progress
+- [x] **Scheduled Campaigns** - Date/time picker with cron processing
 
 ## 🔒 Security Notes
 
