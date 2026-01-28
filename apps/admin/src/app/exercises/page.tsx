@@ -66,14 +66,20 @@ const CATEGORIES = {
 };
 
 const BODY_AREAS = [
-  "lower_body",
-  "upper_body",
-  "core",
-  "full_body",
-  "hips",
-  "shoulders",
-  "spine",
-  "feet_ankles",
+  { value: "lower_body", label: "Lower Body", icon: "🦵" },
+  { value: "upper_body", label: "Upper Body", icon: "💪" },
+  { value: "core", label: "Core", icon: "🎯" },
+  { value: "full_body", label: "Full Body", icon: "🏃" },
+  { value: "hips", label: "Hips", icon: "🔄" },
+  { value: "shoulders", label: "Shoulders", icon: "🤷" },
+  { value: "spine", label: "Spine", icon: "🦴" },
+  { value: "feet_ankles", label: "Feet & Ankles", icon: "🦶" },
+];
+
+const DIFFICULTY_LEVELS = [
+  { value: 1, label: "Beginner", color: "text-green-600 bg-green-500/10" },
+  { value: 2, label: "Intermediate", color: "text-amber-600 bg-amber-500/10" },
+  { value: 3, label: "Advanced", color: "text-red-600 bg-red-500/10" },
 ];
 
 // Category badge component
@@ -89,52 +95,94 @@ function CategoryBadge({ category }: { category: keyof typeof CATEGORIES }) {
   );
 }
 
+// Difficulty badge component
+function DifficultyBadge({ level }: { level: number }) {
+  const config = DIFFICULTY_LEVELS.find(d => d.value === level) || DIFFICULTY_LEVELS[0];
+  return (
+    <Badge variant="outline" className={`text-xs ${config.color}`}>
+      {config.label}
+    </Badge>
+  );
+}
+
+// Body area badge component
+function BodyAreaBadge({ area }: { area: string }) {
+  const config = BODY_AREAS.find(b => b.value === area);
+  if (!config) return null;
+  return (
+    <Badge variant="secondary" className="text-xs gap-1">
+      <span>{config.icon}</span>
+      {config.label}
+    </Badge>
+  );
+}
+
 // Exercise card component
 function ExerciseCard({
   exercise,
   onClick,
   onEdit,
   onDelete,
+  selectable = false,
+  selected = false,
+  onSelect,
 }: {
   exercise: VTExercise;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   return (
     <Card
-      className="hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={onClick}
+      className={`hover:shadow-md transition-all cursor-pointer group ${
+        selected ? "ring-2 ring-primary bg-primary/5" : ""
+      }`}
+      onClick={selectable ? onSelect : onClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg group-hover:text-primary transition-colors">
-              {exercise.name}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <CategoryBadge category={exercise.category} />
-              {exercise.bodyArea && (
-                <Badge variant="secondary" className="text-xs">
-                  {exercise.bodyArea.replace("_", " ")}
-                </Badge>
+          <div className="space-y-2 flex-1">
+            <div className="flex items-start gap-2">
+              {selectable && (
+                <div 
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    selected 
+                      ? "bg-primary border-primary text-white" 
+                      : "border-muted-foreground/30"
+                  }`}
+                >
+                  {selected && <span className="text-xs">✓</span>}
+                </div>
               )}
+              <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                {exercise.name}
+              </CardTitle>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <CategoryBadge category={exercise.category} />
+              {exercise.bodyArea && <BodyAreaBadge area={exercise.bodyArea} />}
+              <DifficultyBadge level={exercise.difficultyLevel} />
             </div>
           </div>
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {exercise.videoUrl && (
-              <Badge variant="outline" className="text-xs gap-1">
-                <Play className="h-3 w-3" />
-                Video
-              </Badge>
-            )}
-            <Button variant="ghost" size="icon" onClick={onEdit}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onDelete}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
+          {!selectable && (
+            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              {exercise.videoUrl && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Play className="h-3 w-3" />
+                  Video
+                </Badge>
+              )}
+              <Button variant="ghost" size="icon" onClick={onEdit}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={onDelete}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          )}
         </div>
       </CardHeader>
       {(exercise.description || (exercise.cues && exercise.cues.length > 0)) && (
@@ -384,7 +432,12 @@ function ExerciseFormDialog({
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {BODY_AREAS.map((area) => (
-                      <SelectItem key={area} value={area}>{area.replace("_", " ")}</SelectItem>
+                      <SelectItem key={area.value} value={area.value}>
+                        <span className="flex items-center gap-2">
+                          <span>{area.icon}</span>
+                          <span>{area.label}</span>
+                        </span>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -440,6 +493,8 @@ export default function ExerciseLibraryPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [bodyAreaFilter, setBodyAreaFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<VTExercise | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -466,8 +521,19 @@ export default function ExerciseLibraryPage() {
   const filteredExercises = exercises.filter((exercise) => {
     if (searchQuery && !exercise.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (categoryFilter !== "all" && exercise.category !== categoryFilter) return false;
+    if (bodyAreaFilter !== "all" && exercise.bodyArea !== bodyAreaFilter) return false;
+    if (difficultyFilter !== "all" && exercise.difficultyLevel !== parseInt(difficultyFilter)) return false;
     return true;
   });
+  
+  const hasActiveFilters = categoryFilter !== "all" || bodyAreaFilter !== "all" || difficultyFilter !== "all" || searchQuery !== "";
+  
+  const clearFilters = () => {
+    setCategoryFilter("all");
+    setBodyAreaFilter("all");
+    setDifficultyFilter("all");
+    setSearchQuery("");
+  };
 
   const groupedExercises = filteredExercises.reduce((acc, exercise) => {
     const category = exercise.category;
@@ -561,15 +627,22 @@ export default function ExerciseLibraryPage() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Search & Filter
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Search & Filter
+            </CardTitle>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search exercises..."
@@ -579,7 +652,7 @@ export default function ExerciseLibraryPage() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {Object.entries(CATEGORIES).map(([key, config]) => (
@@ -587,7 +660,35 @@ export default function ExerciseLibraryPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={bodyAreaFilter} onValueChange={setBodyAreaFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Body Area" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Body Areas</SelectItem>
+                {BODY_AREAS.map((area) => (
+                  <SelectItem key={area.value} value={area.value}>
+                    <span className="flex items-center gap-2">
+                      <span>{area.icon}</span>
+                      <span>{area.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Difficulty" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Levels</SelectItem>
+                {DIFFICULTY_LEVELS.map((level) => (
+                  <SelectItem key={level.value} value={String(level.value)}>{level.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {hasActiveFilters && (
+            <p className="text-sm text-muted-foreground mt-3">
+              Showing {filteredExercises.length} of {exercises.length} exercises
+            </p>
+          )}
         </CardContent>
       </Card>
 

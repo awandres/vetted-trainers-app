@@ -490,6 +490,9 @@ export const vtPrescriptions = pgTable("vt_prescriptions", {
     .primaryKey()
     .$defaultFn(() => createId()),
   
+  // Name/title for the prescription
+  name: text("name"),
+  
   // Member
   memberId: text("member_id")
     .references(() => vtMembers.id, { onDelete: "cascade" })
@@ -528,7 +531,62 @@ export const vtPrescriptionExercises = pgTable("vt_prescription_exercises", {
   // Order (1-5)
   orderIndex: integer("order_index").notNull().default(0),
   
+  // Exercise parameters
+  sets: integer("sets").default(3),
+  reps: text("reps"), // e.g., "10-12", "8", "12-15"
+  duration: text("duration"), // e.g., "30s", "1min", "45s hold"
+  
   // Optional notes specific to this prescription
+  notes: text("notes"),
+});
+
+// =============================================================================
+// WORKOUT TEMPLATES
+// =============================================================================
+
+// Workout templates - reusable prescription templates
+export const vtWorkoutTemplates = pgTable("vt_workout_templates", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  
+  // Template info
+  name: text("name").notNull(),
+  description: text("description"),
+  
+  // Creator (optional - for personal templates)
+  createdByTrainerId: text("created_by_trainer_id")
+    .references(() => vtTrainers.id, { onDelete: "set null" }),
+  
+  // Template visibility
+  isPublic: boolean("is_public").default(false).notNull(), // Can other trainers use it?
+  
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Workout template exercises - exercises in a template
+export const vtWorkoutTemplateExercises = pgTable("vt_workout_template_exercises", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  
+  // Links
+  templateId: text("template_id")
+    .references(() => vtWorkoutTemplates.id, { onDelete: "cascade" })
+    .notNull(),
+  exerciseId: text("exercise_id")
+    .references(() => vtExercises.id, { onDelete: "cascade" })
+    .notNull(),
+  
+  // Order
+  orderIndex: integer("order_index").notNull().default(0),
+  
+  // Default exercise parameters (can be overridden when using template)
+  sets: integer("sets").default(3),
+  reps: text("reps"),
+  duration: text("duration"),
   notes: text("notes"),
 });
 

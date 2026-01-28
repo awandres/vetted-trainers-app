@@ -47,6 +47,10 @@ import {
     FileText,
     Activity,
     Users,
+    Plus,
+    Send,
+    Eye,
+    ExternalLink,
 } from "lucide-react";
 
 // Types
@@ -62,8 +66,12 @@ interface Contract {
 
 interface Prescription {
     id: string;
+    name: string | null;
     status: string;
+    sentAt: string | null;
+    viewedAt: string | null;
     createdAt: string;
+    exerciseCount?: number;
 }
 
 interface Trainer {
@@ -614,37 +622,72 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
 
                 {/* Prescriptions */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Activity className="h-5 w-5" />
-                            Mobility Prescriptions
-                        </CardTitle>
-                        <CardDescription>Assigned exercises and mobility routines</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Activity className="h-5 w-5" />
+                                Mobility Prescriptions
+                            </CardTitle>
+                            <CardDescription>Assigned exercises and mobility routines</CardDescription>
+                        </div>
+                        <Link href={`/prescriptions/new?member=${member.id}`}>
+                            <Button size="sm">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Prescription
+                            </Button>
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         {member.prescriptions && member.prescriptions.length > 0 ? (
-                            <div className="space-y-4">
-                                {member.prescriptions.map((prescription) => (
-                                    <div
-                                        key={prescription.id}
-                                        className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
-                                    >
-                                        <div className="space-y-1">
-                                            <p className="font-medium">Prescription</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                Created {formatDate(prescription.createdAt)}
-                                            </p>
-                                        </div>
-                                        <Badge variant={prescription.status === "sent" ? "default" : "secondary"}>
-                                            {prescription.status}
-                                        </Badge>
-                                    </div>
-                                ))}
+                            <div className="space-y-3">
+                                {member.prescriptions.map((prescription) => {
+                                    const statusConfig = {
+                                        draft: { label: "Draft", icon: FileText, color: "bg-gray-500/10 text-gray-600" },
+                                        sent: { label: "Sent", icon: Send, color: "bg-blue-500/10 text-blue-600" },
+                                        viewed: { label: "Viewed", icon: Eye, color: "bg-green-500/10 text-green-600" },
+                                    }[prescription.status] || { label: prescription.status, icon: FileText, color: "" };
+                                    const StatusIcon = statusConfig.icon;
+
+                                    return (
+                                        <Link 
+                                            key={prescription.id}
+                                            href={`/prescriptions/${prescription.id}`}
+                                            className="block"
+                                        >
+                                            <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-medium">
+                                                            {prescription.name || "Mobility Prescription"}
+                                                        </p>
+                                                        <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {formatDate(prescription.createdAt)}
+                                                        {prescription.exerciseCount !== undefined && (
+                                                            <span> · {prescription.exerciseCount} exercises</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <Badge variant="outline" className={statusConfig.color}>
+                                                    <StatusIcon className="h-3 w-3 mr-1" />
+                                                    {statusConfig.label}
+                                                </Badge>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="text-center py-8 text-muted-foreground">
                                 <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
                                 <p>No prescriptions assigned</p>
+                                <Link href={`/prescriptions/new?member=${member.id}`}>
+                                    <Button variant="outline" size="sm" className="mt-4">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create First Prescription
+                                    </Button>
+                                </Link>
                             </div>
                         )}
                     </CardContent>

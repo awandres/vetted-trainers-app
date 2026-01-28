@@ -398,10 +398,12 @@ export default function PrescriptionsPage() {
             <p className="text-muted-foreground">Create and send exercise prescriptions</p>
           </div>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Prescription
-        </Button>
+        <Link href="/prescriptions/new">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            New Prescription
+          </Button>
+        </Link>
       </div>
 
       {/* Stats */}
@@ -456,16 +458,18 @@ export default function PrescriptionsPage() {
             <div className="text-center py-12">
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium">No prescriptions yet</p>
-              <Button className="mt-4" onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />Create Prescription
-              </Button>
+              <Link href="/prescriptions/new">
+                <Button className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />Create Prescription
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Member</TableHead>
+                    <TableHead>Prescription</TableHead>
                     <TableHead>Exercises</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Status</TableHead>
@@ -474,10 +478,18 @@ export default function PrescriptionsPage() {
                 </TableHeader>
                 <TableBody>
                   {prescriptions.map((prescription) => (
-                    <TableRow key={prescription.id}>
+                    <TableRow 
+                      key={prescription.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => window.location.href = `/prescriptions/${prescription.id}`}
+                    >
                       <TableCell>
-                        <p className="font-medium">{prescription.memberFirstName} {prescription.memberLastName}</p>
-                        {prescription.memberEmail && <p className="text-sm text-muted-foreground">{prescription.memberEmail}</p>}
+                        <div>
+                          <p className="font-medium">{prescription.name || "Mobility Prescription"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {prescription.memberFirstName} {prescription.memberLastName}
+                          </p>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -491,7 +503,7 @@ export default function PrescriptionsPage() {
                       </TableCell>
                       <TableCell>{formatDate(prescription.createdAt)}</TableCell>
                       <TableCell><StatusBadge status={prescription.status} /></TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           {prescription.status === "draft" && (
                             <Button variant="ghost" size="sm" onClick={() => handleSend(prescription.id)}>
