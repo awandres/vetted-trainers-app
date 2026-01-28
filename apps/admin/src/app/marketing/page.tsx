@@ -19,6 +19,7 @@ import {
   Users,
   MousePointer,
   TrendingUp,
+  XCircle,
 } from "lucide-react";
 import {
   Button,
@@ -117,6 +118,22 @@ export default function MarketingPage() {
     }
   };
 
+  const handleCancelSchedule = async (id: string) => {
+    if (!confirm("Are you sure you want to cancel this scheduled campaign?")) return;
+    try {
+      const res = await fetch(`/api/marketing/campaigns/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "draft", scheduledAt: null }),
+      });
+      if (!res.ok) throw new Error("Failed to cancel");
+      const data = await res.json();
+      setCampaigns(campaigns.map((c) => (c.id === id ? { ...c, ...data.campaign } : c)));
+    } catch (err) {
+      console.error("Error canceling schedule:", err);
+    }
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("en-US", {
@@ -133,6 +150,7 @@ export default function MarketingPage() {
     total: campaigns.length,
     sent: campaigns.filter((c) => c.status === "sent").length,
     draft: campaigns.filter((c) => c.status === "draft").length,
+    scheduled: campaigns.filter((c) => c.status === "scheduled").length,
     totalSent: campaigns.reduce((sum, c) => sum + (c.sentCount || 0), 0),
     avgOpenRate: campaigns.filter((c) => c.status === "sent").length > 0
       ? (campaigns.filter((c) => c.status === "sent").reduce((sum, c) => sum + (c.openRate || 0), 0) / 
@@ -184,7 +202,7 @@ export default function MarketingPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.draft} draft, {stats.sent} sent
+                {stats.draft} draft, {stats.scheduled} scheduled, {stats.sent} sent
               </p>
             </CardContent>
           </Card>
@@ -285,10 +303,17 @@ export default function MarketingPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={statusConfig.color}>
-                              <StatusIcon className={`h-3 w-3 mr-1 ${campaign.status === "sending" ? "animate-spin" : ""}`} />
-                              {statusConfig.label}
-                            </Badge>
+                            <div>
+                              <Badge variant="outline" className={statusConfig.color}>
+                                <StatusIcon className={`h-3 w-3 mr-1 ${campaign.status === "sending" ? "animate-spin" : ""}`} />
+                                {statusConfig.label}
+                              </Badge>
+                              {campaign.status === "scheduled" && campaign.scheduledAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formatDate(campaign.scheduledAt)}
+                                </p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="secondary" className="capitalize">
@@ -306,6 +331,16 @@ export default function MarketingPage() {
                           </TableCell>
                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
+                              {campaign.status === "scheduled" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleCancelSchedule(campaign.id)}
+                                  title="Cancel Schedule"
+                                >
+                                  <XCircle className="h-4 w-4 text-orange-500" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"

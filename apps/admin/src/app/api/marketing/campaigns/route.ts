@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       templateData,
       audienceType,
       audienceFilter,
+      scheduledAt,
     } = body;
 
     if (!name || !subject) {
@@ -53,6 +54,23 @@ export async function POST(request: NextRequest) {
         { error: "Name and subject are required" },
         { status: 400 }
       );
+    }
+
+    // Determine status based on whether scheduling is requested
+    let status: "draft" | "scheduled" = "draft";
+    let scheduledAtDate: Date | null = null;
+
+    if (scheduledAt) {
+      const parsed = new Date(scheduledAt);
+      if (parsed > new Date()) {
+        status = "scheduled";
+        scheduledAtDate = parsed;
+      } else {
+        return NextResponse.json(
+          { error: "Scheduled time must be in the future" },
+          { status: 400 }
+        );
+      }
     }
 
     const [campaign] = await db
@@ -65,7 +83,8 @@ export async function POST(request: NextRequest) {
         templateData: templateData || {},
         audienceType: audienceType || "all",
         audienceFilter: audienceFilter || null,
-        status: "draft",
+        status,
+        scheduledAt: scheduledAtDate,
       })
       .returning();
 

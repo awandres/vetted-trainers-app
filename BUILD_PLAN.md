@@ -178,6 +178,12 @@ This document outlines the implementation plan for the remaining features of the
 - [x] Test email functionality
 - [x] Status updates during send
 - [x] Batch email sending
+- [x] Schedule for future date/time
+- [x] Date/time picker in campaign builder
+- [x] Cron endpoint for processing scheduled campaigns (`/api/marketing/cron`)
+- [x] Vercel Cron configuration (runs every 5 minutes)
+- [x] Cancel scheduled campaign functionality
+- [x] Reschedule campaign from detail page
 
 ### 3.7 Campaign Analytics ✅
 - [x] Created `vtEmailCampaigns` table with stats

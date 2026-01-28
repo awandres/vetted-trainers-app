@@ -15,6 +15,9 @@ import {
   Bell,
   Loader2,
   Check,
+  Calendar,
+  Clock,
+  X,
 } from "lucide-react";
 import {
   Button,
@@ -85,7 +88,13 @@ export default function NewCampaignPage() {
   const [isLoadingSegments, setIsLoadingSegments] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
   const [testEmail, setTestEmail] = useState("");
+  
+  // Scheduling state
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("10:00");
 
   // Fetch audience segments
   useEffect(() => {
@@ -182,6 +191,70 @@ export default function NewCampaignPage() {
     }
   };
 
+  const handleSchedule = async () => {
+    if (!name.trim() || !subject.trim()) {
+      alert("Please enter a campaign name and subject");
+      return;
+    }
+
+    if (!scheduleDate || !scheduleTime) {
+      alert("Please select a date and time");
+      return;
+    }
+
+    // Combine date and time into ISO string
+    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+    
+    // Check if scheduled time is in the future
+    if (new Date(scheduledAt) <= new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+
+    setIsScheduling(true);
+
+    try {
+      const res = await fetch("/api/marketing/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          subject,
+          previewText,
+          templateType,
+          templateData: getTemplateData(),
+          audienceType,
+          scheduledAt,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to schedule campaign");
+      
+      const formattedDate = new Date(scheduledAt).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      
+      alert(`Campaign scheduled for ${formattedDate}`);
+      router.push("/marketing");
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Failed to schedule campaign");
+    } finally {
+      setIsScheduling(false);
+      setShowScheduleModal(false);
+    }
+  };
+
+  // Get minimum date for scheduling (today)
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
   const handleTestSend = async () => {
     if (!testEmail.trim()) {
       alert("Please enter a test email address");
@@ -248,7 +321,7 @@ export default function NewCampaignPage() {
               <Button
                 variant="outline"
                 onClick={() => handleSave(false)}
-                disabled={isSaving || isSending}
+                disabled={isSaving || isSending || isScheduling}
               >
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -258,8 +331,16 @@ export default function NewCampaignPage() {
                 Save Draft
               </Button>
               <Button
+                variant="outline"
+                onClick={() => setShowScheduleModal(true)}
+                disabled={isSaving || isSending || isScheduling}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule
+              </Button>
+              <Button
                 onClick={() => handleSave(true)}
-                disabled={isSaving || isSending}
+                disabled={isSaving || isSending || isScheduling}
               >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -554,6 +635,112 @@ export default function NewCampaignPage() {
           </div>
         </div>
       </main>
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Schedule Campaign
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowScheduleModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Choose when to send this campaign
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="scheduleDate">Date</Label>
+                <Input
+                  id="scheduleDate"
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  min={getMinDate()}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="scheduleTime">Time</Label>
+                <Input
+                  id="scheduleTime"
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              {/* Quick time suggestions */}
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Suggested times:</p>
+                <div className="flex flex-wrap gap-2">
+                  {["09:00", "10:00", "12:00", "14:00", "18:00"].map((time) => (
+                    <Button
+                      key={time}
+                      variant={scheduleTime === time ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setScheduleTime(time)}
+                    >
+                      {time.replace(":00", "")}:00 {parseInt(time) < 12 ? "AM" : "PM"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {scheduleDate && scheduleTime && (
+                <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-sm text-center">
+                    <Clock className="h-4 w-4 inline mr-1" />
+                    Campaign will be sent on{" "}
+                    <span className="font-medium">
+                      {new Date(`${scheduleDate}T${scheduleTime}`).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowScheduleModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSchedule}
+                  disabled={!scheduleDate || !scheduleTime || isScheduling}
+                >
+                  {isScheduling ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Calendar className="h-4 w-4 mr-2" />
+                  )}
+                  Schedule
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

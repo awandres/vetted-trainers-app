@@ -225,7 +225,9 @@ This document maps every spreadsheet function to its app equivalent.
 | Audience segmentation | All, Active, Inactive, Churned, New filters | ✅ Built |
 | Recipient count | Real-time count preview | ✅ Built |
 | Send now | Immediate batch sending | ✅ Built |
-| Schedule send | Future scheduling | 🔨 To Build |
+| Schedule send | Future date/time picker | ✅ Built |
+| Cron processing | Auto-send at scheduled time | ✅ Built |
+| Cancel/Reschedule | Modify scheduled campaigns | ✅ Built |
 | Test email | Send test to self | ✅ Built |
 | Campaign analytics | Open, click, bounce tracking | ✅ Built |
 | Unsubscribe handling | Opt-out API + landing page | ✅ Built |
@@ -306,7 +308,7 @@ This document maps every spreadsheet function to its app equivalent.
 | Task Management | 12 | 11 | 1 |
 | Session Log | 6 | 4 | 2 |
 | Website CMS | 9 | 8 | 1 |
-| Marketing Email | 12 | 11 | 1 |
+| Marketing Email | 15 | 15 | 0 |
 | Client Portal | 15 | 14 | 1 |
 | Trainer Dashboard | 13 | 13 | 0 |
 | **TOTAL** | **188** | **111** | **77** |
@@ -354,7 +356,7 @@ This document maps every spreadsheet function to its app equivalent.
 - [ ] Member CRUD forms (create/edit/delete)
 - [ ] Trainer CRUD forms
 - [ ] Version history UI in CMS
-- [ ] Scheduled email campaigns
+- [x] ~~Scheduled email campaigns~~ ✅
 
 ### 🟡 Medium Priority
 - [ ] Task board (Kanban)
