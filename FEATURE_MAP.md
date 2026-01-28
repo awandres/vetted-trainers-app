@@ -166,14 +166,18 @@ This document maps every spreadsheet function to its app equivalent.
 
 | Spreadsheet Feature | App Feature | Status |
 |---------------------|-------------|--------|
-| Member Name | Link to member | ✅ In Schema |
-| Status (SENT/draft) | Status enum | ✅ In Schema |
-| Member Email | From member record | ✅ In Schema |
-| Move 1-5 | Junction table (5 exercises) | ✅ In Schema |
-| Send email | Email integration | 🔨 To Build |
-| BCC trainer | Email config | 🔨 To Build |
-| Prescription builder UI | Drag-drop interface | 🔨 To Build |
-| View sent prescriptions | Prescription history | 🔨 To Build |
+| Member Name | Link to member | ✅ Built |
+| Status (SENT/draft) | Status enum | ✅ Built |
+| Member Email | From member record | ✅ Built |
+| Move 1-5 | Junction table (unlimited exercises) | ✅ Built |
+| Send email | Email integration | ✅ Built |
+| BCC trainer | Email config | ✅ Built |
+| Prescription builder UI | Visual builder `/prescriptions/new` | ✅ Built |
+| View sent prescriptions | Prescription history + detail page | ✅ Built |
+| Sets/Reps/Duration | Per-exercise configuration | ✅ Built |
+| Exercise notes | Per-exercise notes field | ✅ Built |
+| Workout templates | Save/load prescription templates | ✅ Built |
+| Exercise library filters | Category, difficulty, body area | ✅ Built |
 
 ---
 
@@ -181,16 +185,18 @@ This document maps every spreadsheet function to its app equivalent.
 
 | Spreadsheet Feature | App Feature | Status |
 |---------------------|-------------|--------|
-| Task title | Title field | ✅ In Schema |
-| Owner | Owner field/relation | ✅ In Schema |
-| Priority (High/Med/Low) | Priority enum | ✅ In Schema |
-| Due Date | Due date field | ✅ In Schema |
-| Status | Status enum | ✅ In Schema |
-| Active Tasks count | Computed | 🔨 To Build |
-| Completed Tasks count | Computed | 🔨 To Build |
-| Completion % | Computed | 🔨 To Build |
+| Task title | Title field | ✅ Built |
+| Owner | Owner field/relation | ✅ Built |
+| Priority (High/Med/Low) | Priority enum | ✅ Built |
+| Due Date | Due date field | ✅ Built |
+| Status | Status enum | ✅ Built |
+| Active Tasks count | Computed | ✅ Built |
+| Completed Tasks count | Computed | ✅ Built |
+| Completion % | Computed | ✅ Built |
 | Task board/Kanban | Kanban view | 🔨 To Build |
-| My Tasks filter | User filter | 🔨 To Build |
+| My Tasks filter | User filter | ✅ Built |
+| Trainer tasks widget | Dashboard widget | ✅ Built |
+| Auto-generated reminders | Inactive/churned client alerts | ✅ Built |
 
 ---
 
@@ -207,6 +213,65 @@ This document maps every spreadsheet function to its app equivalent.
 | Auto-update member status | Trigger/job | 🔨 To Build |
 
 ---
+
+## 📧 Marketing Email → Email Campaigns
+
+| Feature | App Feature | Status |
+|---------|-------------|--------|
+| Email service integration | Resend SDK in `@vt/email` | ✅ Built |
+| React Email templates | Newsletter, Promotion, Reminder, Prescription | ✅ Built |
+| Campaign management UI | `/marketing` list with status/stats | ✅ Built |
+| Email builder | `/marketing/new` visual builder | ✅ Built |
+| Audience segmentation | All, Active, Inactive, Churned, New filters | ✅ Built |
+| Recipient count | Real-time count preview | ✅ Built |
+| Send now | Immediate batch sending | ✅ Built |
+| Schedule send | Future scheduling | 🔨 To Build |
+| Test email | Send test to self | ✅ Built |
+| Campaign analytics | Open, click, bounce tracking | ✅ Built |
+| Unsubscribe handling | Opt-out API + landing page | ✅ Built |
+| CAN-SPAM compliance | Footer with unsubscribe link | ✅ Built |
+
+---
+
+## 👤 Client Portal → Member Self-Service
+
+| Feature | App Feature | Status |
+|---------|-------------|--------|
+| Client authentication | `@vt/auth` integration | ✅ Built |
+| Login page | Email/password login | ✅ Built |
+| Client dashboard | Welcome, stats, quick actions | ✅ Built |
+| My prescriptions list | `/prescriptions` page | ✅ Built |
+| Prescription detail view | `/prescriptions/[id]` page | ✅ Built |
+| YouTube video embeds | Exercise video player | ✅ Built |
+| Coaching cues display | Per-exercise instructions | ✅ Built |
+| Sets/reps/duration | Exercise parameters | ✅ Built |
+| Auto-mark as viewed | Track prescription opens | ✅ Built |
+| Session history | `/sessions` page | ✅ Built |
+| Sessions grouped by month | Monthly grouping | ✅ Built |
+| Session stats | This month, total, last session | ✅ Built |
+| Progress tracking | `/progress` page | ✅ Built |
+| Achievement badges | Unlockable achievements | ✅ Built |
+| Trainer messaging | Message thread with trainer | 🔨 To Build |
+
+---
+
+## 👨‍🏫 Trainer Dashboard → Trainer Self-Service
+
+| Feature | App Feature | Status |
+|---------|-------------|--------|
+| Role-based routing | Trainer vs Admin dashboard | ✅ Built |
+| My clients list | `/my-clients` page | ✅ Built |
+| Client status badges | Active, Inactive, Churned | ✅ Built |
+| Days since last visit | Color-coded urgency | ✅ Built |
+| Quick actions | Log session, send prescription | ✅ Built |
+| My sessions view | `/my-sessions` page | ✅ Built |
+| Week navigator | Previous/next week | ✅ Built |
+| Session stats | Revenue, clients trained | ✅ Built |
+| Tasks widget | Pending reminders | ✅ Built |
+| Add task inline | Quick task creation | ✅ Built |
+| My payroll | `/my-payroll` page | ✅ Built |
+| YTD earnings | Year-to-date stats | ✅ Built |
+| Period history | Last 12 weeks | ✅ Built |
 
 ---
 
@@ -228,26 +293,29 @@ This document maps every spreadsheet function to its app equivalent.
 
 ## Summary Stats
 
-| Category | Total Features | In Schema | Built | To Build |
-|----------|----------------|-----------|-------|----------|
-| Member Management | 11 | 9 | 5 | 6 |
-| Trainer Management | 17 | 6 | 4 | 13 |
-| Session Tracking (KPI) | 17 | 5 | 5 | 12 |
-| Financial Dashboard | 14 | 14 | 8 | 6 |
-| Payroll System | 18 | 8 | 6 | 12 |
-| Contract Management | 22 | 14 | 4 | 18 |
-| Exercise Database | 10 | 6 | 3 | 4 |
-| Prescription System | 8 | 5 | 0 | 8 |
-| Task Management | 11 | 5 | 0 | 11 |
-| Session Log | 6 | 5 | 4 | 2 |
-| Website CMS | 9 | 9 | 8 | 1 |
-| **TOTAL** | **143** | **86** | **47** | **93** |
+| Category | Total Features | Built | To Build |
+|----------|----------------|-------|----------|
+| Member Management | 11 | 5 | 6 |
+| Trainer Management | 17 | 4 | 13 |
+| Session Tracking (KPI) | 17 | 5 | 12 |
+| Financial Dashboard | 14 | 8 | 6 |
+| Payroll System | 18 | 6 | 12 |
+| Contract Management | 22 | 4 | 18 |
+| Exercise Database | 10 | 6 | 4 |
+| Prescription System | 12 | 12 | 0 |
+| Task Management | 12 | 11 | 1 |
+| Session Log | 6 | 4 | 2 |
+| Website CMS | 9 | 8 | 1 |
+| Marketing Email | 12 | 11 | 1 |
+| Client Portal | 15 | 14 | 1 |
+| Trainer Dashboard | 13 | 13 | 0 |
+| **TOTAL** | **188** | **111** | **77** |
 
 ---
 
 ## Priority Order for Implementation
 
-### ✅ Completed Features
+### ✅ Completed Features (Phase 1-4)
 1. ~~Member status auto-calculation~~ ✅
 2. ~~Visit/session logging~~ ✅
 3. ~~Inactive/churned alerts widget~~ ✅
@@ -260,23 +328,43 @@ This document maps every spreadsheet function to its app equivalent.
 10. ~~Version history & rollback~~ ✅
 11. ~~Draft/Publish system~~ ✅
 12. ~~Vercel Deploy Hook integration~~ ✅
+13. ~~Trainer Dashboard~~ ✅ (Phase 1)
+14. ~~Role-based routing~~ ✅
+15. ~~My Clients & My Sessions pages~~ ✅
+16. ~~Trainer tasks/reminders widget~~ ✅
+17. ~~Trainer payroll summary~~ ✅
+18. ~~Enhanced Prescription Builder~~ ✅ (Phase 2)
+19. ~~Visual workout builder~~ ✅
+20. ~~Workout templates~~ ✅
+21. ~~Sets/reps/duration config~~ ✅
+22. ~~Prescription delivery~~ ✅
+23. ~~Marketing Email Module~~ ✅ (Phase 3)
+24. ~~React Email templates~~ ✅
+25. ~~Campaign management UI~~ ✅
+26. ~~Audience segmentation~~ ✅
+27. ~~Campaign analytics~~ ✅
+28. ~~Unsubscribe handling~~ ✅
+29. ~~Client Portal~~ ✅ (Phase 4)
+30. ~~Client authentication~~ ✅
+31. ~~My prescriptions view~~ ✅
+32. ~~Session history~~ ✅
+33. ~~Progress tracking & achievements~~ ✅
 
 ### 🔴 High Priority (Next)
 - [ ] Member CRUD forms (create/edit/delete)
 - [ ] Trainer CRUD forms
 - [ ] Version history UI in CMS
-- [ ] Authentication setup
+- [ ] Scheduled email campaigns
 
 ### 🟡 Medium Priority
 - [ ] Task board (Kanban)
-- [ ] Prescription builder
-- [ ] Email integration
 - [ ] Mobile optimization
+- [ ] Trainer-client messaging
 
 ### 🟢 Lower Priority
 - [ ] Advanced analytics
 - [ ] Automated alerts/notifications
-- [ ] Client portal features
+- [ ] Progress photo uploads
 
 ---
 
