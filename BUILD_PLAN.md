@@ -19,19 +19,22 @@ This document outlines the implementation plan for the remaining features of the
 
 **Goal:** Enable trainers to view their clients, upcoming sessions, and tasks from a personalized dashboard.
 
-### 1.1 Role-Based Dashboard Routing
-- [ ] Update main dashboard (`/`) to detect user role
-- [ ] Create trainer-specific dashboard layout
-- [ ] Redirect trainers to filtered view on login
-- [ ] Keep full admin view for admin users
+### 1.1 Role-Based Dashboard Routing ✅
+- [x] Update main dashboard (`/`) to detect user role
+- [x] Create trainer-specific dashboard layout (`TrainerDashboard.tsx`)
+- [x] Redirect trainers to filtered view on login
+- [x] Keep full admin view for admin users
 
-### 1.2 Trainer's Client List
-- [ ] Filter members by `trainerId` matching logged-in trainer
-- [ ] Show client cards with:
+### 1.2 Trainer's Client List ✅
+- [x] Filter members by `trainerId` matching logged-in trainer
+- [x] Show client cards with:
   - Name, status, last visit date
   - Days since last visit (with color coding)
   - Quick actions: View, Log Session, Send Prescription
-- [ ] Add client search/filter
+- [x] Add client search/filter
+- [x] Created `/my-clients` page
+- [x] Created `/api/trainers/my-clients` endpoint
+- [x] Created `/api/trainers/my-sessions` endpoint
 
 ### 1.3 Trainer's Session View
 - [ ] Create "My Sessions" page for trainers
@@ -339,8 +342,12 @@ Then refer to the specific phase section above and work through each checkbox it
 Update this section as work progresses:
 
 ### Current Phase: 1 - Trainer Dashboard
-### Current Chunk: 1.1 - Role-Based Dashboard Routing
+### Current Chunk: 1.3 - Trainer's Session View
 ### Last Updated: 2026-01-27
+
+#### Completed:
+- ✅ 1.1 Role-Based Dashboard Routing
+- ✅ 1.2 Trainer's Client List
 
 ---
 

@@ -14,6 +14,7 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@vt/ui";
 import { AlertsWidget } from "@/components/AlertsWidget";
 import { UserMenu } from "@/components/UserMenu";
+import { TrainerDashboard } from "@/components/TrainerDashboard";
 import { db, vtMembers, vtSessions, eq, sql, and, gte } from "@vt/db";
 import { getServerSession } from "@/lib/auth";
 
@@ -148,6 +149,10 @@ export default async function AdminDashboard() {
     getServerSession(),
   ]);
 
+  const isTrainer = session?.user?.role === "trainer";
+  const isAdmin = session?.user?.role === "admin";
+  const portalTitle = isTrainer ? "Trainer Portal" : "Admin Portal";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -156,7 +161,7 @@ export default async function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Vetted Trainers</h1>
-              <p className="text-sm text-muted-foreground">Admin Portal</p>
+              <p className="text-sm text-muted-foreground">{portalTitle}</p>
             </div>
             <nav className="flex items-center gap-4">
               <UserMenu />
@@ -167,12 +172,18 @@ export default async function AdminDashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Welcome to the Vetted Trainers admin portal
-          </p>
-        </div>
+        {/* Show Trainer Dashboard for trainers */}
+        {isTrainer && <TrainerDashboard />}
+
+        {/* Show Admin Dashboard for admins and non-authenticated users */}
+        {!isTrainer && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+              <p className="text-muted-foreground">
+                Welcome to the Vetted Trainers admin portal
+              </p>
+            </div>
 
         {/* Quick Stats */}
         <div className="mb-8 grid gap-4 md:grid-cols-4">
@@ -308,6 +319,8 @@ export default async function AdminDashboard() {
             </Link>
           ))}
         </div>
+          </>
+        )}
       </main>
     </div>
   );
