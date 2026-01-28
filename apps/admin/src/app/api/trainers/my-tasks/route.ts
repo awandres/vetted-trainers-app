@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtTasks, vtTrainers, vtMembers, eq, desc, and, or, isNull, lte, ne } from "@vt/db";
+import { db, vtTasks, vtTrainers, vtMembers, eq, desc, and, or, isNull, lte, not } from "@vt/db";
 import { getServerSession } from "@/lib/auth";
 import { createId } from "@vt/db";
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(vtTasks.ownerId, trainerId));
     }
     if (status === "pending") {
-      conditions.push(ne(vtTasks.status, "done"));
+      conditions.push(not(eq(vtTasks.status, "done")));
     } else if (status === "completed") {
       conditions.push(eq(vtTasks.status, "done"));
     }

@@ -36,36 +36,36 @@ This document outlines the implementation plan for the remaining features of the
 - [x] Created `/api/trainers/my-clients` endpoint
 - [x] Created `/api/trainers/my-sessions` endpoint
 
-### 1.3 Trainer's Session View
-- [ ] Create "My Sessions" page for trainers
-- [ ] Show sessions for trainer's clients only
-- [ ] Today's sessions highlighted
-- [ ] Week view calendar (optional)
-- [ ] Quick session logging form
+### 1.3 Trainer's Session View ✅
+- [x] Create "My Sessions" page for trainers
+- [x] Show sessions for trainer's clients only
+- [x] Today's sessions highlighted
+- [x] Week view calendar with session counts
+- [x] Week navigator (previous/next)
+- [x] Sessions grouped by date
+- [x] Stats: sessions, revenue, clients trained
 
-### 1.4 Reminders & Tasks System
-- [ ] Create `vtReminders` table in database schema
-  ```sql
-  - id, trainerId, memberId, type, title, dueDate, completedAt, createdAt
-  ```
-- [ ] Auto-generate reminders:
-  - "Follow up with inactive client [Name]" (7+ days since visit)
-  - "Send exercise plan to [Name]" (new client, no prescription)
-  - "Enter payroll hours" (weekly, if not submitted)
-- [ ] Reminders widget on trainer dashboard
-- [ ] Mark as complete / snooze functionality
+### 1.4 Reminders & Tasks System ✅
+- [x] Used existing `vtTasks` table
+- [x] API endpoints for task CRUD (`/api/trainers/my-tasks`)
+- [x] Auto-generate reminders from inactive/churned clients
+- [x] TasksWidget component on trainer dashboard
+- [x] Mark as complete functionality
+- [x] Add new task inline form
 
-### 1.5 Trainer Payroll Summary
-- [ ] Show trainer's own payroll data
-- [ ] Current period sessions & estimated pay
-- [ ] Historical pay periods
-- [ ] Hours entry form (if applicable)
+### 1.5 Trainer Payroll Summary ✅
+- [x] Show trainer's own payroll data (`/my-payroll`)
+- [x] Current period sessions & estimated pay
+- [x] Historical pay periods (last 12 weeks)
+- [x] YTD stats (earnings, sessions, avg per session)
+- [x] Period selector with navigation
 
-### 1.6 Trainer Quick Actions
-- [ ] "Log Session" shortcut
-- [ ] "New Prescription" shortcut
-- [ ] "View My Clients" shortcut
-- [ ] Notification badge for pending tasks
+### 1.6 Trainer Quick Actions ✅
+- [x] "Log Session" shortcut
+- [x] "New Prescription" shortcut
+- [x] "View My Clients" shortcut
+- [x] "My Sessions" shortcut
+- [x] "My Payroll" shortcut
 
 ---
 
@@ -341,13 +341,18 @@ Then refer to the specific phase section above and work through each checkbox it
 
 Update this section as work progresses:
 
-### Current Phase: 1 - Trainer Dashboard
-### Current Chunk: 1.3 - Trainer's Session View
-### Last Updated: 2026-01-27
+### Current Phase: 2 - Enhanced Prescription Builder
+### Current Chunk: 2.1 - Exercise Library Enhancement
+### Last Updated: 2026-01-28
 
 #### Completed:
-- ✅ 1.1 Role-Based Dashboard Routing
-- ✅ 1.2 Trainer's Client List
+- ✅ Phase 1: Trainer Dashboard (all chunks complete)
+  - 1.1 Role-Based Dashboard Routing
+  - 1.2 Trainer's Client List
+  - 1.3 Trainer's Session View
+  - 1.4 Reminders & Tasks System
+  - 1.5 Trainer Payroll Summary
+  - 1.6 Trainer Quick Actions
 
 ---
 

@@ -250,7 +250,7 @@ export function TrainerDashboard() {
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/payroll">
+            <Link href="/my-payroll">
               <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
                 <CardContent className="flex items-center gap-4 py-4">
                   <div className="rounded-lg bg-amber-500/10 p-3">
@@ -259,6 +259,20 @@ export function TrainerDashboard() {
                   <div className="flex-1">
                     <p className="font-semibold">My Payroll</p>
                     <p className="text-sm text-muted-foreground">View pay & submit hours</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/my-sessions">
+              <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                <CardContent className="flex items-center gap-4 py-4">
+                  <div className="rounded-lg bg-cyan-500/10 p-3">
+                    <Calendar className="h-5 w-5 text-cyan-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">My Sessions</p>
+                    <p className="text-sm text-muted-foreground">View session history</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </CardContent>
