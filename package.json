@@ -1,0 +1,28 @@
+{
+  "name": "vetted-trainers-app",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.14.2",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:admin": "turbo dev --filter=@vt/admin",
+    "dev:website": "turbo dev --filter=@vt/website",
+    "dev:client": "turbo dev --filter=@vt/client",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:push": "pnpm --filter @vt/db db:push",
+    "db:generate": "pnpm --filter @vt/db db:generate",
+    "db:migrate": "pnpm --filter @vt/db db:migrate",
+    "db:studio": "pnpm --filter @vt/db db:studio",
+    "seed": "dotenv -e .env -- tsx scripts/import-data.ts"
+  },
+  "devDependencies": {
+    "csv-parse": "^5.6.0",
+    "dotenv-cli": "^11.0.0",
+    "tsx": "^4.19.2",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3"
+  }
+}
