@@ -36,6 +36,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
+  Mail,
 } from "lucide-react";
 
 // Types
@@ -754,7 +755,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Quick Links */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Link href="/members">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
               <CardContent className="flex items-center gap-4 py-6">
@@ -802,6 +803,19 @@ export default function DashboardPage() {
                   <p className="font-medium">Payroll</p>
                   <p className="text-sm text-muted-foreground">
                     Weekly calculations
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/marketing">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardContent className="flex items-center gap-4 py-6">
+                <Mail className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">Marketing</p>
+                  <p className="text-sm text-muted-foreground">
+                    Email campaigns
                   </p>
                 </div>
               </CardContent>

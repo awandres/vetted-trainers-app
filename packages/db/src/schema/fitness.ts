@@ -55,6 +55,10 @@ export const vtMembers = pgTable("vt_members", {
   tags: jsonb("tags").$type<string[]>().default([]),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   
+  // Email preferences
+  emailOptOut: boolean("email_opt_out").default(false), // Marketing email opt-out
+  emailOptOutAt: timestamp("email_opt_out_at", { withTimezone: true }),
+  
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),

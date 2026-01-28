@@ -10,3 +10,6 @@ export * from "./fitness";
 
 // Website builder schemas
 export * from "./website";
+
+// Marketing & email schemas
+export * from "./marketing";
