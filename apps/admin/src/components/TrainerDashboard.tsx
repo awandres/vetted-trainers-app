@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@vt/ui";
 import { useAuth } from "./AuthProvider";
+import { TasksWidget } from "./TasksWidget";
 
 interface Client {
   id: string;
@@ -201,9 +202,11 @@ export function TrainerDashboard() {
 
       {/* Two Column Layout */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Quick Actions */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Quick Actions</h3>
+        {/* Left Column: Quick Actions + Tasks */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Quick Actions</h3>
           <div className="grid gap-3">
             <Link href="/visits">
               <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
@@ -262,9 +265,13 @@ export function TrainerDashboard() {
               </Card>
             </Link>
           </div>
+          </div>
+
+          {/* Tasks Widget */}
+          <TasksWidget />
         </div>
 
-        {/* Clients Needing Attention */}
+        {/* Right Column: Clients Needing Attention */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -333,8 +340,8 @@ export function TrainerDashboard() {
             <Clock className="h-5 w-5 text-muted-foreground" />
             Recent Sessions
           </h3>
-          <Link href="/my-sessions" className="text-sm text-primary hover:underline">
-            View all
+          <Link href="/my-sessions" className="text-sm text-primary hover:underline flex items-center gap-1">
+            View all sessions <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
         <Card>

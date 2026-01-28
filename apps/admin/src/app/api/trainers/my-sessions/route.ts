@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtSessions, vtMembers, vtTrainers, eq, desc, sql } from "@vt/db";
+import { db, vtSessions, vtMembers, vtTrainers, eq, desc, sql, and, gte, lte } from "@vt/db";
 import { getServerSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "10");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
     // Get the trainer ID for this user
     let trainerId = session.user.trainerId;
@@ -34,8 +36,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Build conditions array
+    const conditions = [];
+    
+    if (trainerId) {
+      conditions.push(eq(vtSessions.trainerId, trainerId));
+    }
+    
+    if (startDate) {
+      conditions.push(gte(vtSessions.sessionDate, startDate));
+    }
+    
+    if (endDate) {
+      conditions.push(lte(vtSessions.sessionDate, endDate));
+    }
+
     // Build query
-    const baseQuery = db
+    const sessions = await db
       .select({
         id: vtSessions.id,
         sessionDate: vtSessions.sessionDate,
@@ -49,13 +66,9 @@ export async function GET(request: NextRequest) {
       })
       .from(vtSessions)
       .leftJoin(vtMembers, eq(vtSessions.memberId, vtMembers.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(vtSessions.sessionDate))
       .limit(limit);
-
-    // Filter by trainer if not admin
-    const sessions = trainerId
-      ? await baseQuery.where(eq(vtSessions.trainerId, trainerId))
-      : await baseQuery;
 
     return NextResponse.json({ sessions });
   } catch (error) {
