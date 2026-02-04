@@ -145,3 +145,6 @@ export {
   TableCell,
   TableCaption,
 } from "./components/table";
+
+// Alert
+export { Alert, AlertTitle, AlertDescription } from "./components/alert";

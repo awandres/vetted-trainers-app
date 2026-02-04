@@ -20,7 +20,6 @@ import { render } from "@react-email/render";
 export { render };
 
 // Render helpers
-import BaseTemplate from "./templates/BaseTemplate";
 import NewsletterTemplate from "./templates/NewsletterTemplate";
 import PromotionTemplate from "./templates/PromotionTemplate";
 import ReminderTemplate from "./templates/ReminderTemplate";
@@ -31,7 +30,8 @@ type TemplateType = "newsletter" | "promotion" | "reminder" | "prescription";
 
 interface RenderTemplateOptions {
   template: TemplateType;
-  props: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  props: any;
 }
 
 /**
@@ -42,16 +42,16 @@ export async function renderTemplate({ template, props }: RenderTemplateOptions)
 
   switch (template) {
     case "newsletter":
-      element = React.createElement(NewsletterTemplate, props as React.ComponentProps<typeof NewsletterTemplate>);
+      element = React.createElement(NewsletterTemplate, props);
       break;
     case "promotion":
-      element = React.createElement(PromotionTemplate, props as React.ComponentProps<typeof PromotionTemplate>);
+      element = React.createElement(PromotionTemplate, props);
       break;
     case "reminder":
-      element = React.createElement(ReminderTemplate, props as React.ComponentProps<typeof ReminderTemplate>);
+      element = React.createElement(ReminderTemplate, props);
       break;
     case "prescription":
-      element = React.createElement(PrescriptionTemplate, props as React.ComponentProps<typeof PrescriptionTemplate>);
+      element = React.createElement(PrescriptionTemplate, props);
       break;
     default:
       throw new Error(`Unknown template type: ${template}`);

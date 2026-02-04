@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm build --filter=@vt/admin",
+  "buildCommand": "pnpm turbo build --filter=@vt/admin",
+  "outputDirectory": "apps/admin/.next",
+  "framework": "nextjs",
   "crons": [
     {
       "path": "/api/marketing/cron",
