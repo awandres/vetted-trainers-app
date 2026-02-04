@@ -29,9 +29,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data, isPending } = useSession() as { 
-    data: SessionData | null; 
-    isPending: boolean 
+  const { data, isPending } = useSession() as {
+    data: SessionData | null;
+    isPending: boolean
   };
 
   const user = data?.user ?? null;
@@ -70,12 +70,12 @@ export function useAuth() {
 /**
  * Component that shows children only when authenticated
  */
-export function RequireAuth({ 
-  children, 
-  fallback 
-}: { 
-  children: ReactNode; 
-  fallback?: ReactNode 
+export function RequireAuth({
+  children,
+  fallback
+}: {
+  children: ReactNode;
+  fallback?: ReactNode
 }) {
   const { isLoading, isAuthenticated } = useAuth();
 
@@ -97,12 +97,12 @@ export function RequireAuth({
 /**
  * Component that shows children only for admins
  */
-export function RequireAdmin({ 
-  children, 
-  fallback 
-}: { 
-  children: ReactNode; 
-  fallback?: ReactNode 
+export function RequireAdmin({
+  children,
+  fallback
+}: {
+  children: ReactNode;
+  fallback?: ReactNode
 }) {
   const { isLoading, isAdmin } = useAuth();
 

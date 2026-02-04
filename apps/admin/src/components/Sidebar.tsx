@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Users,
@@ -23,8 +23,10 @@ import {
   X,
   Database,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { Button, cn } from "@vt/ui";
+import { useAuth } from "./AuthProvider";
 
 const modules = [
   {
@@ -101,6 +103,8 @@ const modules = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -111,6 +115,11 @@ export function Sidebar() {
       setIsCollapsed(saved === "true");
     }
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+  };
 
   // Save collapsed state to localStorage
   const toggleCollapsed = () => {
@@ -223,14 +232,39 @@ export function Sidebar() {
           </ul>
         </nav>
 
-        {/* Collapse/Expand Toggle (Desktop only) */}
-        <div className="hidden lg:block border-t p-2">
+        {/* User Section & Sign Out */}
+        <div className={cn(
+          "border-t p-3",
+          isCollapsed && "flex flex-col items-center"
+        )}>
+          {!isCollapsed && user && (
+            <div className="mb-3 px-2">
+              <p className="text-sm font-medium truncate">
+                {user.name || user.email}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+          )}
+          
+          <button
+            onClick={handleSignOut}
+            className={cn(
+              "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
+              isCollapsed && "justify-center"
+            )}
+            title={isCollapsed ? "Sign Out" : undefined}
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            {!isCollapsed && <span className="text-sm">Sign Out</span>}
+          </button>
+
+          {/* Collapse Toggle - Desktop only */}
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleCollapsed}
             className={cn(
-              "w-full h-10",
+              "w-full h-10 mt-2 hidden lg:flex",
               isCollapsed ? "justify-center px-2" : "justify-start"
             )}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -290,6 +324,26 @@ export function Sidebar() {
             })}
           </ul>
         </nav>
+
+        {/* User Section & Sign Out - Mobile */}
+        <div className="border-t p-3">
+          {user && (
+            <div className="mb-3 px-2">
+              <p className="text-sm font-medium truncate">
+                {user.name || user.email}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+          )}
+          
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            <span className="text-sm">Sign Out</span>
+          </button>
+        </div>
       </aside>
     </>
   );
