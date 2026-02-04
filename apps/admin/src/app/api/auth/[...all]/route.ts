@@ -9,6 +9,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
+  "https://vetted-trainers-app-admin.vercel.app",
   "https://admin.vettedtrainers.com",
   "https://app.vettedtrainers.com",
   "https://vettedtrainers.com",
@@ -54,18 +55,26 @@ export async function GET(request: NextRequest) {
 
 // Wrap POST with CORS headers
 export async function POST(request: NextRequest) {
-  const response = await originalPOST(request);
-  const corsHeaders = getCorsHeaders(request);
-  
-  // Clone and add CORS headers
-  const newHeaders = new Headers(response.headers);
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    newHeaders.set(key, value);
-  });
-  
-  return new NextResponse(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: newHeaders,
-  });
+  try {
+    const response = await originalPOST(request);
+    const corsHeaders = getCorsHeaders(request);
+    
+    // Clone and add CORS headers
+    const newHeaders = new Headers(response.headers);
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      newHeaders.set(key, value);
+    });
+    
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    });
+  } catch (error) {
+    console.error("Auth POST error:", error);
+    return NextResponse.json(
+      { error: "Authentication error", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
 }
