@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 const PUBLIC_ROUTES = ["/login", "/access-expired"];
 
 // API routes that should be accessible without auth (for login, etc.)
-const PUBLIC_API_ROUTES = ["/api/auth"];
+const PUBLIC_API_ROUTES = ["/api/auth", "/api/debug"];
 
 // Portal routes (for members only)
 const PORTAL_ROUTES = ["/portal"];

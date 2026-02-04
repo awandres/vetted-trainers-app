@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, users, count } from "@vt/db";
 
 /**
  * Debug endpoint to check configuration
  * DELETE THIS IN PRODUCTION
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const checks: Record<string, unknown> = {};
   
   // Check environment variables (don't expose actual values)
@@ -14,6 +14,13 @@ export async function GET() {
     BETTER_AUTH_SECRET: !!process.env.BETTER_AUTH_SECRET ? "✅ Set" : "❌ Missing",
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "❌ Missing",
     NODE_ENV: process.env.NODE_ENV,
+  };
+  
+  // Check cookies
+  const sessionCookie = request.cookies.get("better-auth.session_token");
+  checks.cookies = {
+    sessionToken: sessionCookie ? `✅ Present (${sessionCookie.value.substring(0, 10)}...)` : "❌ Not set",
+    allCookies: request.cookies.getAll().map(c => c.name),
   };
   
   // Check database connection
