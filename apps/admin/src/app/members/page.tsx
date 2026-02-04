@@ -319,11 +319,11 @@ function AddMemberDialog({
 }
 
 // Alert Widget Component
-function AlertsWidget({ 
-  members, 
-  onFilterChange 
-}: { 
-  members: VTMember[]; 
+function AlertsWidget({
+  members,
+  onFilterChange
+}: {
+  members: VTMember[];
   onFilterChange: (status: string) => void;
 }) {
   const inactiveMembers = members.filter((m) => m.status === "inactive");
@@ -392,7 +392,7 @@ function AlertsWidget({
 export default function MembersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const [members, setMembers] = useState<VTMember[]>([]);
   const [trainers, setTrainers] = useState<VTTrainer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -699,8 +699,8 @@ export default function MembersPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredMembers.map((member) => (
-                      <TableRow 
-                        key={member.id} 
+                      <TableRow
+                        key={member.id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => window.location.href = `/members/${member.id}`}
                       >

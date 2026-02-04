@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
-import { useSession } from "@vt/auth/client";
+import { createContext, useContext, ReactNode, useCallback } from "react";
+import { useSession, signOut as authSignOut } from "@vt/auth/client";
 import { Loader2 } from "lucide-react";
 
 type SessionUser = {
@@ -23,6 +23,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isTrainer: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -35,8 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const user = data?.user ?? null;
   const isAuthenticated = !!user;
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isTrainer = user?.role === "trainer" || isAdmin;
+
+  const signOut = useCallback(async () => {
+    await authSignOut();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -46,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isAdmin,
         isTrainer,
+        signOut,
       }}
     >
       {children}
