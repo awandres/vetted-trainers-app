@@ -96,19 +96,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, message: "Access enabled" });
 
     case "set_time_limit":
-      // Set time limit in minutes - calculates expiry from NOW
+      // Set time limit in minutes - timer starts on login, not now
       const minutes = parseInt(value) || 5;
-      const expiresAt = new Date(Date.now() + minutes * 60 * 1000);
       await db.update(users)
         .set({ 
           accessDurationMinutes: minutes,
-          accessExpiresAt: expiresAt,
+          accessExpiresAt: null, // Will be set when user logs in
           accessDisabled: false,
         })
         .where(eq(users.id, userId));
       return NextResponse.json({ 
         success: true, 
-        message: `Time limit set to ${minutes} minutes (expires at ${expiresAt.toLocaleTimeString()})` 
+        message: `Time limit set to ${minutes} minutes (timer starts on login)` 
       });
 
     case "remove_time_limit":

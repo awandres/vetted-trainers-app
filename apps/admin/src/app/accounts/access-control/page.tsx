@@ -196,15 +196,15 @@ export default function AccessControlPage() {
       );
     }
     
-    // Check for duration set but no expiry (legacy - needs to be re-set)
+    // Check for duration set but no expiry (timer starts on login)
     if (user.accessDurationMinutes) {
       return (
         <div className="flex flex-col gap-1">
-          <Badge className="bg-orange-500/10 text-orange-400 w-fit">
+          <Badge className="bg-blue-500/10 text-blue-400 w-fit">
             <Clock className="h-3 w-3 mr-1" /> {user.accessDurationMinutes} min limit
           </Badge>
           <span className="text-xs text-gray-500">
-            Timer not started - click Start Timer
+            Timer starts when user logs in
           </span>
         </div>
       );

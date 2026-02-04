@@ -7,7 +7,8 @@ import { db, users, eq } from "@vt/db";
  * Called after login attempt to:
  * 1. Check if user has access (not disabled/expired)
  * 2. Update last login timestamps
- * 3. Return access status
+ * 3. Start time-limited access timer on successful login
+ * 4. Return access status
  */
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
         id: users.id,
         accessDisabled: users.accessDisabled,
         accessExpiresAt: users.accessExpiresAt,
+        accessDurationMinutes: users.accessDurationMinutes,
       })
       .from(users)
       .where(eq(users.email, email));
@@ -56,11 +58,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // If successful login and access is allowed, update last login time
+    // If successful login and access is allowed
     if (success) {
+      const updateData: Record<string, unknown> = { lastLoginAt: now };
+      
+      // If user has a time limit set but no expiry yet, start the timer NOW
+      if (user.accessDurationMinutes && !user.accessExpiresAt) {
+        const expiresAt = new Date(now.getTime() + user.accessDurationMinutes * 60 * 1000);
+        updateData.accessExpiresAt = expiresAt;
+        console.log(`Starting ${user.accessDurationMinutes} minute timer for user ${email}, expires at ${expiresAt.toISOString()}`);
+      }
+      
       await db
         .update(users)
-        .set({ lastLoginAt: now })
+        .set(updateData)
         .where(eq(users.id, user.id));
     }
 
