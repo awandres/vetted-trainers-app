@@ -61,22 +61,22 @@ export default function LoginPage() {
         const sessionData = await sessionRes.json();
         const userRole = sessionData?.user?.role || "member";
         
-        // Redirect based on role
+        // Redirect based on role - use hard redirect for production reliability
+        let destination = "/";
         if (redirectUrl) {
-          // If there's a specific redirect, use it (unless it's a portal route and user isn't a member)
-          router.push(redirectUrl);
+          destination = redirectUrl;
         } else if (userRole === "member") {
-          // Members go to the portal
-          router.push("/portal");
-        } else {
-          // Admin, trainers, super_admin go to the dashboard
-          router.push("/");
+          destination = "/portal";
         }
+        
+        // Use hard redirect for reliable navigation
+        window.location.href = destination;
       } else {
-        // Fallback: just go to home and let the page handle it
-        router.push("/");
+        // Fallback: just go to home
+        window.location.href = "/";
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("An unexpected error occurred");
       setLoading(false);
     }
