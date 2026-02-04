@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, users } from "@vt/db";
-import { count } from "drizzle-orm";
+import { db, users, count } from "@vt/db";
 
 /**
  * Debug endpoint to check configuration
