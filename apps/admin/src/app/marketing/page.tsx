@@ -20,6 +20,11 @@ import {
   MousePointer,
   TrendingUp,
   XCircle,
+  Zap,
+  Settings,
+  Play,
+  Pause,
+  Bell,
 } from "lucide-react";
 import {
   Button,
@@ -56,9 +61,48 @@ interface Campaign {
   createdAt: string;
 }
 
+interface AutomatedEmail {
+  id: string;
+  name: string;
+  description: string | null;
+  trigger: string;
+  triggerMode: "always" | "optional" | "disabled";
+  subject: string;
+  previewText: string | null;
+  templateType: string;
+  isActive: boolean;
+  testMode: boolean;
+  testEmails: string | null;
+  sentCount: number;
+  lastSentAt: string | null;
+  createdAt: string;
+}
+
+// Trigger display names
+const TRIGGER_LABELS: Record<string, { label: string; icon: typeof Bell; description: string }> = {
+  session_booked: { label: "Session Booked", icon: Calendar, description: "When a session is scheduled" },
+  session_reminder_24h: { label: "24h Reminder", icon: Clock, description: "24 hours before a session" },
+  session_reminder_1h: { label: "1h Reminder", icon: Clock, description: "1 hour before a session" },
+  session_completed: { label: "Session Complete", icon: CheckCircle, description: "After a session is marked complete" },
+  session_cancelled: { label: "Session Cancelled", icon: XCircle, description: "When a session is cancelled" },
+  session_rescheduled: { label: "Session Rescheduled", icon: Calendar, description: "When a session time changes" },
+  prescription_sent: { label: "Prescription Sent", icon: Mail, description: "When a prescription is sent" },
+  welcome_new_member: { label: "Welcome Email", icon: Users, description: "When a new member joins" },
+  membership_expiring: { label: "Membership Expiring", icon: AlertCircle, description: "Before membership expires" },
+  inactivity_reminder: { label: "Inactivity Reminder", icon: Clock, description: "When member hasn't visited" },
+  birthday: { label: "Birthday", icon: Bell, description: "On member's birthday" },
+  custom: { label: "Custom", icon: Settings, description: "Custom trigger" },
+};
+
+const TRIGGER_MODE_LABELS = {
+  always: { label: "Always", color: "bg-green-500/10 text-green-600" },
+  optional: { label: "Optional", color: "bg-blue-500/10 text-blue-600" },
+  disabled: { label: "Disabled", color: "bg-gray-500/10 text-gray-500" },
+};
+
 // Status configuration
 const STATUS_CONFIG = {
-  draft: { label: "Draft", icon: Edit, color: "bg-gray-500/10 text-gray-600" },
+  draft: { label: "Draft", icon: Edit, color: "bg-background0/10 text-gray-600" },
   scheduled: { label: "Scheduled", icon: Clock, color: "bg-blue-500/10 text-blue-600" },
   sending: { label: "Sending", icon: Loader2, color: "bg-yellow-500/10 text-yellow-600" },
   sent: { label: "Sent", icon: CheckCircle, color: "bg-green-500/10 text-green-600" },
@@ -67,16 +111,27 @@ const STATUS_CONFIG = {
 
 export default function MarketingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [automatedEmails, setAutomatedEmails] = useState<AutomatedEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"campaigns" | "automated">("campaigns");
 
   useEffect(() => {
-    async function fetchCampaigns() {
+    async function fetchData() {
       try {
-        const res = await fetch("/api/marketing/campaigns");
-        if (!res.ok) throw new Error("Failed to fetch campaigns");
-        const data = await res.json();
-        setCampaigns(data.campaigns || []);
+        const [campaignsRes, automatedRes] = await Promise.all([
+          fetch("/api/marketing/campaigns"),
+          fetch("/api/marketing/automated"),
+        ]);
+        
+        if (!campaignsRes.ok) throw new Error("Failed to fetch campaigns");
+        const campaignsData = await campaignsRes.json();
+        setCampaigns(campaignsData.campaigns || []);
+
+        if (automatedRes.ok) {
+          const automatedData = await automatedRes.json();
+          setAutomatedEmails(automatedData.automatedEmails || []);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -84,7 +139,7 @@ export default function MarketingPage() {
       }
     }
 
-    fetchCampaigns();
+    fetchData();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -134,6 +189,30 @@ export default function MarketingPage() {
     }
   };
 
+  const handleToggleAutomated = async (id: string) => {
+    try {
+      const res = await fetch(`/api/marketing/automated/${id}/toggle`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to toggle");
+      const data = await res.json();
+      setAutomatedEmails(automatedEmails.map((a) => 
+        a.id === id ? { ...a, isActive: data.automatedEmail.isActive } : a
+      ));
+    } catch (err) {
+      console.error("Error toggling automated email:", err);
+    }
+  };
+
+  const handleDeleteAutomated = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this automated email?")) return;
+    try {
+      const res = await fetch(`/api/marketing/automated/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      setAutomatedEmails(automatedEmails.filter((a) => a.id !== id));
+    } catch (err) {
+      console.error("Error deleting automated email:", err);
+    }
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("en-US", {
@@ -160,7 +239,7 @@ export default function MarketingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -178,20 +257,57 @@ export default function MarketingPage() {
                 Marketing
               </h1>
               <p className="text-sm text-muted-foreground">
-                Email campaigns and member communication
+                Email campaigns and automated communications
               </p>
             </div>
-            <Link href="/marketing/new">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Campaign
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              {activeTab === "campaigns" ? (
+                <Link href="/marketing/new">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Campaign
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/marketing/automated/new">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Automated Email
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+          
+          {/* Tabs */}
+          <div className="flex gap-1 mt-4">
+            <Button
+              variant={activeTab === "campaigns" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("campaigns")}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              Campaigns
+              <Badge variant="secondary" className="ml-1">{campaigns.length}</Badge>
+            </Button>
+            <Button
+              variant={activeTab === "automated" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("automated")}
+              className="gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Automated Emails
+              <Badge variant="secondary" className="ml-1">{automatedEmails.length}</Badge>
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {activeTab === "campaigns" && (
+          <>
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -368,6 +484,199 @@ export default function MarketingPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeTab === "automated" && (
+          <>
+            {/* Automated Stats */}
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Automated</CardTitle>
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{automatedEmails.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {automatedEmails.filter(a => a.isActive).length} active
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Emails Triggered</CardTitle>
+                  <Send className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {automatedEmails.reduce((sum, a) => sum + (a.sentCount || 0), 0).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">All time</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Always Active</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {automatedEmails.filter(a => a.triggerMode === "always" && a.isActive).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Mandatory triggers</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Optional</CardTitle>
+                  <Settings className="h-4 w-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {automatedEmails.filter(a => a.triggerMode === "optional").length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">User-configurable</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Automated Emails Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Automated Emails
+                </CardTitle>
+                <CardDescription>
+                  System-triggered emails sent automatically based on events
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {automatedEmails.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium">No automated emails yet</p>
+                    <p className="text-sm text-muted-foreground mt-1 mb-4">
+                      Create automated emails to engage members at key moments
+                    </p>
+                    <Link href="/marketing/automated/new">
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Automated Email
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Trigger</TableHead>
+                          <TableHead>Mode</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Sent</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {automatedEmails.map((autoEmail) => {
+                          const triggerInfo = TRIGGER_LABELS[autoEmail.trigger] || TRIGGER_LABELS.custom;
+                          const TriggerIcon = triggerInfo.icon;
+                          const modeInfo = TRIGGER_MODE_LABELS[autoEmail.triggerMode];
+
+                          return (
+                            <TableRow
+                              key={autoEmail.id}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => window.location.href = `/marketing/automated/${autoEmail.id}`}
+                            >
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{autoEmail.name}</p>
+                                  <p className="text-sm text-muted-foreground truncate max-w-xs">
+                                    {autoEmail.subject}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <TriggerIcon className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="text-sm font-medium">{triggerInfo.label}</p>
+                                    <p className="text-xs text-muted-foreground">{triggerInfo.description}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={modeInfo.color}>
+                                  {modeInfo.label}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={autoEmail.isActive 
+                                      ? "bg-green-500/10 text-green-600" 
+                                      : "bg-gray-500/10 text-gray-500"
+                                    }
+                                  >
+                                    {autoEmail.isActive ? (
+                                      <><Play className="h-3 w-3 mr-1" /> Active</>
+                                    ) : (
+                                      <><Pause className="h-3 w-3 mr-1" /> Paused</>
+                                    )}
+                                  </Badge>
+                                  {autoEmail.testMode && (
+                                    <Badge variant="outline" className="bg-orange-500/10 text-orange-600 text-xs">
+                                      🧪 Test Mode
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {autoEmail.sentCount > 0 ? autoEmail.sentCount.toLocaleString() : "—"}
+                              </TableCell>
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleToggleAutomated(autoEmail.id)}
+                                    title={autoEmail.isActive ? "Pause" : "Activate"}
+                                  >
+                                    {autoEmail.isActive ? (
+                                      <Pause className="h-4 w-4 text-orange-500" />
+                                    ) : (
+                                      <Play className="h-4 w-4 text-green-500" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteAutomated(autoEmail.id)}
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
       </main>
     </div>
   );

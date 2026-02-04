@@ -32,6 +32,14 @@ import {
   CardTitle,
   Badge,
   Separator,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Input,
+  Label,
 } from "@vt/ui";
 
 // Types
@@ -77,7 +85,7 @@ const CATEGORIES: Record<string, { label: string; icon: typeof Dumbbell; color: 
 
 // Status config
 const STATUS_CONFIG = {
-  draft: { label: "Draft", color: "bg-gray-500/10 text-gray-600", icon: FileText },
+  draft: { label: "Draft", color: "bg-background0/10 text-gray-600", icon: FileText },
   sent: { label: "Sent", color: "bg-blue-500/10 text-blue-600", icon: Send },
   viewed: { label: "Viewed", color: "bg-green-500/10 text-green-600", icon: CheckCircle },
 };
@@ -106,6 +114,8 @@ export default function PrescriptionDetailPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedExercises, setExpandedExercises] = useState<Set<number>>(new Set());
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
 
   useEffect(() => {
     async function fetchPrescription() {
@@ -126,20 +136,29 @@ export default function PrescriptionDetailPage() {
     }
   }, [prescriptionId]);
 
-  const handleSend = async () => {
+  const handleSend = async (toTestEmail?: string) => {
     if (!prescription) return;
     setIsSending(true);
     try {
       const res = await fetch(`/api/prescriptions/${prescription.id}/send`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toTestEmail ? { testEmail: toTestEmail } : {}),
       });
       if (!res.ok) throw new Error("Failed to send");
       const data = await res.json();
-      setPrescription({ ...prescription, status: "sent", sentAt: new Date().toISOString() });
-      alert(data.message || "Prescription sent!");
+      
+      if (toTestEmail) {
+        alert(data.message || `Test email sent to ${toTestEmail}`);
+      } else {
+        setPrescription({ ...prescription, status: "sent", sentAt: new Date().toISOString() });
+        alert(data.message || "Prescription sent!");
+      }
+      setShowSendDialog(false);
+      setTestEmail("");
     } catch (err) {
       console.error("Error sending prescription:", err);
-      alert("Failed to send prescription");
+      alert("Failed to send prescription. Please check the console for details.");
     } finally {
       setIsSending(false);
     }
@@ -184,7 +203,7 @@ export default function PrescriptionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -192,7 +211,7 @@ export default function PrescriptionDetailPage() {
 
   if (error || !prescription) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-medium text-destructive">
             {error || "Prescription not found"}
@@ -241,7 +260,7 @@ export default function PrescriptionDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               {prescription.status === "draft" && (
-                <Button onClick={handleSend} disabled={isSending}>
+                <Button onClick={() => setShowSendDialog(true)} disabled={isSending}>
                   {isSending ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -459,6 +478,71 @@ export default function PrescriptionDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Send Dialog */}
+      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Prescription</DialogTitle>
+            <DialogDescription>
+              Enter email address(es) to send this prescription to.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {prescription?.memberEmail && (
+              <div className="p-3 rounded-lg bg-muted">
+                <Label className="text-sm font-medium">Client on file</Label>
+                <p className="text-sm text-muted-foreground">
+                  {prescription.memberFirstName} {prescription.memberLastName} ({prescription.memberEmail})
+                </p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto text-xs"
+                  onClick={() => setTestEmail(prescription.memberEmail || "")}
+                >
+                  Use this email
+                </Button>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="testEmail">Recipient Email(s)</Label>
+              <Input
+                id="testEmail"
+                type="text"
+                placeholder="email@example.com, another@example.com"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter one or more email addresses, separated by commas
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowSendDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleSend(testEmail)}
+              disabled={isSending || !testEmail.trim()}
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Send Email
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

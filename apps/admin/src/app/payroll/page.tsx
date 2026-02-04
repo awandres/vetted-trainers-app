@@ -84,7 +84,7 @@ function formatWeekEnding(dateStr: string): string {
 
 function StatusBadge({ status }: { status: string }) {
   const config = {
-    draft: { label: "Draft", className: "bg-gray-500/10 text-gray-600", icon: FileText },
+    draft: { label: "Draft", className: "bg-background0/10 text-gray-600", icon: FileText },
     review: { label: "In Review", className: "bg-yellow-500/10 text-yellow-600", icon: Clock },
     approved: { label: "Approved", className: "bg-blue-500/10 text-blue-600", icon: CheckCircle },
     paid: { label: "Paid", className: "bg-green-500/10 text-green-600", icon: DollarSign },

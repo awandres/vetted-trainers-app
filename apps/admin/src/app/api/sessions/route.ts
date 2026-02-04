@@ -135,6 +135,64 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         })
         .where(eq(vtMembers.id, memberId));
+
+      // Trigger automated "session_booked" email
+      try {
+        // Get member and trainer info for the email
+        const [member] = await db
+          .select()
+          .from(vtMembers)
+          .where(eq(vtMembers.id, memberId));
+        
+        const [trainer] = await db
+          .select()
+          .from(vtTrainers)
+          .where(eq(vtTrainers.id, trainerId));
+
+        console.log("[Session Email Trigger] Member:", member?.firstName, "Email:", member?.email);
+
+        if (member?.email) {
+          // Format date for email
+          const dateObj = new Date(sessionDate);
+          const formattedDate = dateObj.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+
+          console.log("[Session Email Trigger] Calling trigger API for session_booked...");
+
+          // Trigger the automated email (fire and forget)
+          const triggerUrl = `${request.nextUrl.origin}/api/marketing/automated/trigger`;
+          fetch(triggerUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              trigger: "session_booked",
+              memberId: memberId,
+              recipientEmail: member.email,
+              recipientName: member.firstName,
+              data: {
+                sessionDate: formattedDate,
+                sessionTime: "See your trainer for details",
+                trainerName: trainer ? `${trainer.firstName} ${trainer.lastName}` : "Your Trainer",
+                sessionType: sessionType,
+              },
+            }),
+          })
+            .then(async (res) => {
+              const data = await res.json();
+              console.log("[Session Email Trigger] Response:", data);
+            })
+            .catch((err) => console.error("[Session Email Trigger] Failed:", err));
+        } else {
+          console.log("[Session Email Trigger] Skipped - member has no email");
+        }
+      } catch (emailErr) {
+        // Don't fail the session creation if email fails
+        console.error("[Session Email Trigger] Error:", emailErr);
+      }
     }
 
     return NextResponse.json({ session: newSession }, { status: 201 });

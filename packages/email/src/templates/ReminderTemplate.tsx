@@ -10,10 +10,11 @@ import BaseTemplate, { colors } from "./BaseTemplate";
 
 interface ReminderTemplateProps {
   previewText?: string;
-  recipientName: string;
-  reminderType: "session" | "prescription" | "check-in" | "general";
+  recipientName?: string;
+  reminderType?: "session" | "prescription" | "check-in" | "general";
   headline: string;
-  reminderDetails: string;
+  reminderDetails?: string;
+  bodyContent?: string; // Alternative to reminderDetails for campaign use
   dateTime?: string;
   trainerName?: string;
   ctaText?: string;
@@ -126,9 +127,10 @@ const getReminderIcon = (type: string) => {
 export default function ReminderTemplate({
   previewText,
   recipientName,
-  reminderType,
+  reminderType = "general",
   headline,
   reminderDetails,
+  bodyContent,
   dateTime,
   trainerName,
   ctaText,
@@ -136,26 +138,28 @@ export default function ReminderTemplate({
   additionalInfo,
 }: ReminderTemplateProps) {
   const icon = getReminderIcon(reminderType);
+  const content = bodyContent || reminderDetails || "";
 
   return (
     <BaseTemplate previewText={previewText || headline}>
       {/* Greeting */}
-      <Text style={greeting}>Hi {recipientName},</Text>
+      {recipientName && <Text style={greeting}>Hi {recipientName},</Text>}
 
       {/* Headline */}
       <Heading style={heading}>{headline}</Heading>
 
-      {/* Reminder Box */}
-      <Section style={reminderBox}>
-        <Text style={reminderIcon}>{icon}</Text>
-        <Text style={reminderTitle}>
-          {reminderType === "session" && "Upcoming Training Session"}
-          {reminderType === "prescription" && "Your Exercise Prescription"}
-          {reminderType === "check-in" && "Time for a Check-In"}
-          {reminderType === "general" && "Reminder"}
-        </Text>
-        <Text style={reminderDetailsStyle}>{reminderDetails}</Text>
-      </Section>
+      {/* Body Content (for marketing campaigns) */}
+      {content && (
+        <Section>
+          {content.split('\n').map((paragraph, index) => (
+            paragraph.trim() ? (
+              <Text key={index} style={bodyText}>{paragraph}</Text>
+            ) : (
+              <div key={index} style={{ height: '8px' }} />
+            )
+          ))}
+        </Section>
+      )}
 
       {/* Date/Time */}
       {dateTime && (

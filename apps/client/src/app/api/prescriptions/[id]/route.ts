@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtMembers, vtPrescriptions, vtPrescriptionExercises, vtExercises, vtTrainers, eq } from "@vt/db";
-import { auth } from "@vt/auth";
-import { headers } from "next/headers";
+import { db, vtMembers, vtPrescriptions, vtPrescriptionExercises, vtExercises, vtTrainers, users, sessions, eq, and, gt } from "@vt/db";
 
 export async function GET(
   request: NextRequest,
@@ -10,22 +8,56 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Get current session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Get session token from cookies
+    let sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json({ error: "No session token" }, { status: 401 });
     }
 
-    // Find member linked to this user's email
-    const [member] = await db
-      .select({ id: vtMembers.id })
-      .from(vtMembers)
-      .where(eq(vtMembers.email, session.user.email));
+    // Better Auth signs cookies with format: token.signature
+    // We need just the token part (before the dot)
+    if (sessionToken.includes(".")) {
+      sessionToken = sessionToken.split(".")[0];
+    }
 
-    if (!member) {
+    // Look up session in database
+    const [session] = await db
+      .select({ userId: sessions.userId })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, sessionToken),
+          gt(sessions.expiresAt, new Date())
+        )
+      );
+
+    if (!session) {
+      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+    }
+
+    // Get user with memberId
+    const [user] = await db
+      .select({ memberId: users.memberId, email: users.email })
+      .from(users)
+      .where(eq(users.id, session.userId));
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
+    let memberId = user.memberId;
+
+    // If no memberId on user, try to find by email
+    if (!memberId && user.email) {
+      const [member] = await db
+        .select({ id: vtMembers.id })
+        .from(vtMembers)
+        .where(eq(vtMembers.email, user.email));
+      memberId = member?.id;
+    }
+
+    if (!memberId) {
       return NextResponse.json({ error: "No member profile found" }, { status: 404 });
     }
 
@@ -40,7 +72,8 @@ export async function GET(
         viewedAt: vtPrescriptions.viewedAt,
         createdAt: vtPrescriptions.createdAt,
         memberId: vtPrescriptions.memberId,
-        trainerName: vtTrainers.name,
+        trainerFirstName: vtTrainers.firstName,
+        trainerLastName: vtTrainers.lastName,
       })
       .from(vtPrescriptions)
       .leftJoin(vtTrainers, eq(vtPrescriptions.prescribedByTrainerId, vtTrainers.id))
@@ -51,7 +84,7 @@ export async function GET(
     }
 
     // Verify ownership
-    if (prescription.memberId !== member.id) {
+    if (prescription.memberId !== memberId) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -88,9 +121,21 @@ export async function GET(
         .where(eq(vtPrescriptions.id, id));
     }
 
+    // Format trainer name
+    const trainerName = prescription.trainerFirstName 
+      ? `${prescription.trainerFirstName} ${prescription.trainerLastName || ''}`.trim() 
+      : null;
+
     return NextResponse.json({
       prescription: {
-        ...prescription,
+        id: prescription.id,
+        name: prescription.name,
+        notes: prescription.notes,
+        status: prescription.status,
+        sentAt: prescription.sentAt,
+        viewedAt: prescription.viewedAt,
+        createdAt: prescription.createdAt,
+        trainerName,
         exercises,
       },
     });

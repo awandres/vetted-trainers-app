@@ -105,10 +105,10 @@ export default function MySessionsPage() {
     new Date(b).getTime() - new Date(a).getTime()
   );
 
-  // Calculate week stats
+  // Calculate week stats (ensure numeric conversion from API strings)
   const weekStats: WeekStats = {
-    totalSessions: sessions.reduce((sum, s) => sum + s.sessionValue, 0),
-    totalRevenue: sessions.reduce((sum, s) => sum + (s.priceCharged || 0), 0),
+    totalSessions: sessions.reduce((sum, s) => sum + Number(s.sessionValue || 0), 0),
+    totalRevenue: sessions.reduce((sum, s) => sum + Number(s.priceCharged || 0), 0),
     uniqueClients: new Set(sessions.map(s => s.memberId)).size,
   };
 
@@ -247,7 +247,7 @@ export default function MySessionsPage() {
                 const { dayName, dayNum, isToday } = formatDayHeader(date);
                 const dateStr = date.toISOString().split("T")[0];
                 const daySessions = sessionsByDate[dateStr] || [];
-                const sessionCount = daySessions.reduce((sum, s) => sum + s.sessionValue, 0);
+                const sessionCount = daySessions.reduce((sum, s) => sum + Number(s.sessionValue || 0), 0);
                 
                 return (
                   <div
@@ -336,11 +336,11 @@ export default function MySessionsPage() {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">
-                            {session.sessionValue} session{session.sessionValue !== 1 ? "s" : ""}
+                            {Number(session.sessionValue)} session{Number(session.sessionValue) !== 1 ? "s" : ""}
                           </p>
                           {session.priceCharged && (
                             <p className="text-sm text-muted-foreground">
-                              ${(session.priceCharged / 100).toFixed(0)}
+                              ${(Number(session.priceCharged) / 100).toFixed(0)}
                             </p>
                           )}
                         </div>

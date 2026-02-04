@@ -233,6 +233,26 @@ pnpm seed         # Import data from CSV files
 | Public Website | 3001 | `http://localhost:3001` | Production website |
 | Client Portal | 3002 | `http://localhost:3002` | Member portal |
 
+## 🔑 Demo Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| Trainer | `demo-trainer@vettedtrainers.com` | `demo123!` |
+
+*To create additional demo accounts, run `npx tsx scripts/seed-demo-trainer.ts`*
+
+## 🎨 Theme System
+
+The admin dashboard includes a theme toggle (palette icon in header) with 3 options:
+
+| Theme | Description |
+|-------|-------------|
+| **Classic Green** | Light theme with green accents (default) |
+| **VT Blue** | Light theme with VT cyan blue (#50BFF4) |
+| **VT Graphite** | Dark graphite background with VT cyan blue |
+
+Themes persist in localStorage and apply instantly without page reload.
+
 ## 🔧 Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
@@ -295,13 +315,31 @@ pnpm seed         # Import data from CSV files
 - [ ] **Task board (Kanban)** - Visual task management for admins
 - [ ] **Trainer-client messaging** - Simple chat thread between trainer and client
 - [ ] **Mobile optimization** - Responsive design improvements
+- [ ] **Email Click Tracking** - Set up Resend webhooks for click/open tracking and CTR stats on automated emails
 
 ### Low Priority
 - [ ] **Advanced analytics** - Additional business metrics and reporting
 - [ ] **Progress photo uploads** - Client-submitted progress photos
 - [ ] **Automated reminders** - Session reminders and follow-up notifications
 
-### ✅ Recently Completed
+### ✅ Recently Completed (Feb 4, 2026)
+- [x] **Automated Emails** - Trigger-based transactional emails (session booked, reminders, etc.)
+- [x] **Test Mode for Automated Emails** - Route emails to test addresses before going live
+- [x] **Send History Logs** - View last 50 triggered sends with status and test mode indicator
+- [x] **Live Email Preview** - Real-time preview in campaign builder as you type
+- [x] **Email Template Branding** - VT logo, blue accent colors, centered social icons
+
+### ✅ Recently Completed (Feb 3, 2026)
+- [x] **Theme Toggle System** - Switch between Classic Green, VT Blue, and VT Graphite themes
+- [x] **Website Headline Restored** - Fixed CMS content with proper cyan highlighting
+- [x] **Demo Trainer Account** - `demo-trainer@vettedtrainers.com` / `demo123!`
+- [x] **Upcoming Sessions on Dashboard** - Shows trainer's scheduled sessions
+- [x] **Sessions Calculation Fix** - Fixed decimal string concatenation bug on My Sessions page
+- [x] **Dev Autofill Button** - Quick demo data fill for prescription builder
+- [x] **Template System Fix** - Fixed API error, added expandable exercise preview
+- [x] **Exercise Detail Modal** - Click exercise name to view description, video, and cues
+
+### ✅ Previously Completed
 - [x] **Trainer Dashboard** - Role-based dashboard with my clients, sessions, tasks
 - [x] **Prescription Builder** - Visual workout builder with templates
 - [x] **Marketing Module** - Email campaigns with scheduling and analytics

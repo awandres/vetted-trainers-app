@@ -50,6 +50,7 @@ interface TrainerStats {
 export function TrainerDashboard() {
   const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
+  const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const [stats, setStats] = useState<TrainerStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,8 +78,15 @@ export function TrainerDashboard() {
           });
         }
 
+        // Fetch upcoming sessions
+        const upcomingRes = await fetch("/api/trainers/my-sessions?type=upcoming&limit=5");
+        if (upcomingRes.ok) {
+          const data = await upcomingRes.json();
+          setUpcomingSessions(data.sessions || []);
+        }
+
         // Fetch recent sessions
-        const sessionsRes = await fetch("/api/trainers/my-sessions?limit=5");
+        const sessionsRes = await fetch("/api/trainers/my-sessions?type=recent&limit=5");
         if (sessionsRes.ok) {
           const data = await sessionsRes.json();
           setRecentSessions(data.sessions || []);
@@ -285,65 +293,128 @@ export function TrainerDashboard() {
           <TasksWidget />
         </div>
 
-        {/* Right Column: Clients Needing Attention */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Clients Needing Attention
-            </h3>
-            <Link href="/my-clients?status=inactive" className="text-sm text-primary hover:underline">
-              View all
-            </Link>
+        {/* Right Column: Clients Needing Attention + Upcoming Sessions */}
+        <div className="space-y-6">
+          {/* Clients Needing Attention */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+                Clients Needing Attention
+              </h3>
+              <Link href="/my-clients?status=inactive" className="text-sm text-primary hover:underline">
+                View all
+              </Link>
+            </div>
+            <Card>
+              <CardContent className="p-0">
+                {clients.filter(c => c.status !== "active" || (c.daysSinceVisit && c.daysSinceVisit > 7)).length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground">
+                    <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <p>All clients are on track!</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {clients
+                      .filter(c => c.status !== "active" || (c.daysSinceVisit && c.daysSinceVisit > 7))
+                      .slice(0, 5)
+                      .map((client) => (
+                        <Link
+                          key={client.id}
+                          href={`/members/${client.id}`}
+                          className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                              {client.firstName[0]}{client.lastName[0]}
+                            </div>
+                            <div>
+                              <p className="font-medium">{client.firstName} {client.lastName}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {client.lastVisitDate 
+                                  ? `Last visit: ${new Date(client.lastVisitDate).toLocaleDateString()}`
+                                  : "No visits recorded"
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
+                              {client.status}
+                            </span>
+                            {client.daysSinceVisit !== null && (
+                              <p className={`text-xs mt-1 ${getDaysColor(client.daysSinceVisit)}`}>
+                                {client.daysSinceVisit} days ago
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <Card>
-            <CardContent className="p-0">
-              {clients.filter(c => c.status !== "active" || (c.daysSinceVisit && c.daysSinceVisit > 7)).length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                  <p>All clients are on track!</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {clients
-                    .filter(c => c.status !== "active" || (c.daysSinceVisit && c.daysSinceVisit > 7))
-                    .slice(0, 5)
-                    .map((client) => (
-                      <Link
-                        key={client.id}
-                        href={`/members/${client.id}`}
-                        className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-                            {client.firstName[0]}{client.lastName[0]}
+
+          {/* Upcoming Sessions */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Upcoming Sessions
+              </h3>
+              <Link href="/my-sessions" className="text-sm text-primary hover:underline flex items-center gap-1">
+                View all <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <Card className="border-primary/20">
+              <CardContent className="p-0">
+                {upcomingSessions.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No upcoming sessions scheduled</p>
+                    <Link href="/visits" className="text-primary hover:underline text-sm mt-2 inline-block">
+                      Schedule a session
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {upcomingSessions.map((session) => {
+                      const sessionDate = new Date(session.sessionDate);
+                      const isToday = sessionDate.toDateString() === new Date().toDateString();
+                      const isTomorrow = sessionDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                      
+                      return (
+                        <div key={session.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                              isToday ? "bg-primary text-primary-foreground" : "bg-primary/10"
+                            }`}>
+                              <Calendar className={`h-5 w-5 ${isToday ? "" : "text-primary"}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium">{session.memberFirstName} {session.memberLastName}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {session.sessionType}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{client.firstName} {client.lastName}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {client.lastVisitDate 
-                                ? `Last visit: ${new Date(client.lastVisitDate).toLocaleDateString()}`
-                                : "No visits recorded"
-                              }
+                          <div className="text-right">
+                            <p className={`font-medium ${isToday ? "text-primary" : ""}`}>
+                              {isToday ? "Today" : isTomorrow ? "Tomorrow" : sessionDate.toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {session.sessionValue} session{session.sessionValue !== 1 ? "s" : ""}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
-                            {client.status}
-                          </span>
-                          {client.daysSinceVisit !== null && (
-                            <p className={`text-xs mt-1 ${getDaysColor(client.daysSinceVisit)}`}>
-                              {client.daysSinceVisit} days ago
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 

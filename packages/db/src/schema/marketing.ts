@@ -89,6 +89,97 @@ export const vtEmailEvents = pgTable("vt_email_events", {
 });
 
 // =============================================================================
+// AUTOMATED EMAILS (Transactional/Triggered)
+// =============================================================================
+
+// Trigger types for automated emails
+export const automatedEmailTriggers = [
+  "session_booked",        // When a session is scheduled
+  "session_reminder_24h",  // 24 hours before a session
+  "session_reminder_1h",   // 1 hour before a session
+  "session_completed",     // After a session is marked complete
+  "session_cancelled",     // When a session is cancelled
+  "session_rescheduled",   // When a session is rescheduled
+  "prescription_sent",     // When a prescription is sent
+  "welcome_new_member",    // When a new member joins
+  "membership_expiring",   // When membership is about to expire
+  "inactivity_reminder",   // When member hasn't visited in X days
+  "birthday",              // On member's birthday
+  "custom",                // Custom trigger (manual)
+] as const;
+export type AutomatedEmailTrigger = (typeof automatedEmailTriggers)[number];
+
+// Trigger modes
+export const triggerModes = ["always", "optional", "disabled"] as const;
+export type TriggerMode = (typeof triggerModes)[number];
+
+// Automated email templates - system-triggered emails
+export const vtAutomatedEmails = pgTable("vt_automated_emails", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+
+  // Identity
+  name: text("name").notNull(),
+  description: text("description"),
+  
+  // Trigger configuration
+  trigger: text("trigger").notNull().$type<AutomatedEmailTrigger>(),
+  triggerMode: text("trigger_mode").notNull().default("optional").$type<TriggerMode>(),
+  
+  // Email content
+  subject: text("subject").notNull(),
+  previewText: text("preview_text"),
+  templateType: text("template_type").notNull().default("reminder"), // newsletter, promotion, reminder
+  templateData: jsonb("template_data").$type<Record<string, unknown>>(),
+  
+  // Timing (for reminder triggers)
+  delayMinutes: integer("delay_minutes").default(0), // Delay after trigger event
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  
+  // Test mode - when enabled, emails only go to testEmails instead of actual recipient
+  testMode: boolean("test_mode").default(false),
+  testEmails: text("test_emails"), // Comma-separated list of test email addresses
+  
+  // Stats
+  sentCount: integer("sent_count").default(0),
+  lastSentAt: timestamp("last_sent_at", { withTimezone: true }),
+  
+  // Metadata
+  createdById: text("created_by_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Automated email logs - track each triggered send
+export const vtAutomatedEmailLogs = pgTable("vt_automated_email_logs", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+
+  // References
+  automatedEmailId: text("automated_email_id")
+    .references(() => vtAutomatedEmails.id, { onDelete: "cascade" })
+    .notNull(),
+  recipientEmail: text("recipient_email").notNull(),
+  memberId: text("member_id"),
+  
+  // Trigger context
+  triggerData: jsonb("trigger_data").$type<Record<string, unknown>>(), // e.g., sessionId
+  
+  // Status
+  status: text("status").notNull().default("pending"), // pending, sent, failed
+  errorMessage: text("error_message"),
+  resendMessageId: text("resend_message_id"),
+  
+  // Timestamps
+  triggeredAt: timestamp("triggered_at", { withTimezone: true }).defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+});
+
+// =============================================================================
 // EMAIL TEMPLATES (Saved templates)
 // =============================================================================
 

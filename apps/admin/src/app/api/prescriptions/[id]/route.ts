@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const [prescription] = await db
+    const [prescriptionRow] = await db
       .select({
         id: vtPrescriptions.id,
         name: vtPrescriptions.name,
@@ -22,12 +22,20 @@ export async function GET(
         memberLastName: vtMembers.lastName,
         memberEmail: vtMembers.email,
         prescribedByTrainerId: vtPrescriptions.prescribedByTrainerId,
-        trainerName: vtTrainers.name,
+        trainerFirstName: vtTrainers.firstName,
+        trainerLastName: vtTrainers.lastName,
       })
       .from(vtPrescriptions)
       .leftJoin(vtMembers, eq(vtPrescriptions.memberId, vtMembers.id))
       .leftJoin(vtTrainers, eq(vtPrescriptions.prescribedByTrainerId, vtTrainers.id))
       .where(eq(vtPrescriptions.id, id));
+    
+    const prescription = prescriptionRow ? {
+      ...prescriptionRow,
+      trainerName: prescriptionRow.trainerFirstName && prescriptionRow.trainerLastName 
+        ? `${prescriptionRow.trainerFirstName} ${prescriptionRow.trainerLastName}` 
+        : null,
+    } : null;
 
     if (!prescription) {
       return NextResponse.json({ error: "Prescription not found" }, { status: 404 });

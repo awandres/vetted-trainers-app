@@ -78,7 +78,7 @@ interface EmailEvent {
 
 // Status configuration
 const STATUS_CONFIG = {
-  draft: { label: "Draft", icon: Edit, color: "bg-gray-500/10 text-gray-600" },
+  draft: { label: "Draft", icon: Edit, color: "bg-background0/10 text-gray-600" },
   scheduled: { label: "Scheduled", icon: Clock, color: "bg-blue-500/10 text-blue-600" },
   sending: { label: "Sending", icon: Loader2, color: "bg-yellow-500/10 text-yellow-600" },
   sent: { label: "Sent", icon: CheckCircle, color: "bg-green-500/10 text-green-600" },
@@ -240,7 +240,7 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -248,7 +248,7 @@ export default function CampaignDetailPage() {
 
   if (error || !campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
           <p className="text-lg font-medium">{error || "Campaign not found"}</p>
@@ -302,14 +302,12 @@ export default function CampaignDetailPage() {
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule
                   </Button>
-                  <Button onClick={handleSend} disabled={isSending}>
-                    {isSending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
+                  <Link href={`/marketing/${campaign.id}/send`}>
+                    <Button>
                       <Send className="h-4 w-4 mr-2" />
-                    )}
-                    Send Now
-                  </Button>
+                      Send Campaign
+                    </Button>
+                  </Link>
                 </>
               )}
               {campaign.status === "scheduled" && (

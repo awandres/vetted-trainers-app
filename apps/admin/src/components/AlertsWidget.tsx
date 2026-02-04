@@ -10,6 +10,7 @@ import {
   CardTitle,
   Badge,
   Separator,
+  Button,
 } from "@vt/ui";
 import {
   AlertTriangle,
@@ -17,6 +18,7 @@ import {
   UserX,
   FileText,
   ChevronRight,
+  ChevronDown,
   Loader2,
 } from "lucide-react";
 
@@ -61,6 +63,20 @@ export function AlertsWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [expandedTrainers, setExpandedTrainers] = useState<Set<string>>(new Set());
+  const [showAllContracts, setShowAllContracts] = useState(false);
+
+  const toggleTrainerExpansion = (trainerId: string) => {
+    setExpandedTrainers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(trainerId)) {
+        newSet.delete(trainerId);
+      } else {
+        newSet.add(trainerId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     async function fetchAlerts() {
@@ -162,33 +178,54 @@ export function AlertsWidget() {
                     expandedSection === "inactive" ? null : "inactive"
                   )
                 }
+                viewAllLink="/members?status=inactive"
               >
-                {inactiveMembers.map((group) => (
-                  <div key={group.trainerId || "unassigned"} className="mb-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                      {group.trainerName} ({group.members.length})
-                    </p>
-                    <div className="space-y-1">
-                      {group.members.slice(0, 3).map((member) => (
-                        <Link
-                          key={member.id}
-                          href={`/members/${member.id}`}
-                          className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 text-sm"
-                        >
-                          <span>{member.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {member.daysSinceVisit} days
-                          </span>
-                        </Link>
-                      ))}
-                      {group.members.length > 3 && (
-                        <p className="text-xs text-muted-foreground px-2">
-                          +{group.members.length - 3} more
-                        </p>
-                      )}
+                {inactiveMembers.map((group) => {
+                  const trainerId = group.trainerId || "unassigned";
+                  const isTrainerExpanded = expandedTrainers.has(`inactive-${trainerId}`);
+                  const visibleCount = isTrainerExpanded ? group.members.length : 3;
+                  const hiddenCount = group.members.length - 3;
+                  
+                  return (
+                    <div key={trainerId} className="mb-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        {group.trainerName} ({group.members.length})
+                      </p>
+                      <div className="space-y-1">
+                        {group.members.slice(0, visibleCount).map((member) => (
+                          <Link
+                            key={member.id}
+                            href={`/members/${member.id}`}
+                            className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 text-sm"
+                          >
+                            <span>{member.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {member.daysSinceVisit} days
+                            </span>
+                          </Link>
+                        ))}
+                        {hiddenCount > 0 && (
+                          <button
+                            onClick={() => toggleTrainerExpansion(`inactive-${trainerId}`)}
+                            className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1"
+                          >
+                            {isTrainerExpanded ? (
+                              <>
+                                <ChevronDown className="h-3 w-3" />
+                                Show less
+                              </>
+                            ) : (
+                              <>
+                                <ChevronRight className="h-3 w-3" />
+                                +{hiddenCount} more
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </AlertSection>
             )}
 
@@ -206,33 +243,54 @@ export function AlertsWidget() {
                     expandedSection === "churned" ? null : "churned"
                   )
                 }
+                viewAllLink="/members?status=churned"
               >
-                {churnedMembers.slice(0, 5).map((group) => (
-                  <div key={group.trainerId || "unassigned"} className="mb-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                      {group.trainerName} ({group.members.length})
-                    </p>
-                    <div className="space-y-1">
-                      {group.members.slice(0, 2).map((member) => (
-                        <Link
-                          key={member.id}
-                          href={`/members/${member.id}`}
-                          className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 text-sm"
-                        >
-                          <span>{member.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {member.daysSinceVisit} days
-                          </span>
-                        </Link>
-                      ))}
-                      {group.members.length > 2 && (
-                        <p className="text-xs text-muted-foreground px-2">
-                          +{group.members.length - 2} more
-                        </p>
-                      )}
+                {churnedMembers.slice(0, 5).map((group) => {
+                  const trainerId = group.trainerId || "unassigned";
+                  const isTrainerExpanded = expandedTrainers.has(`churned-${trainerId}`);
+                  const visibleCount = isTrainerExpanded ? group.members.length : 2;
+                  const hiddenCount = group.members.length - 2;
+                  
+                  return (
+                    <div key={trainerId} className="mb-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        {group.trainerName} ({group.members.length})
+                      </p>
+                      <div className="space-y-1">
+                        {group.members.slice(0, visibleCount).map((member) => (
+                          <Link
+                            key={member.id}
+                            href={`/members/${member.id}`}
+                            className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 text-sm"
+                          >
+                            <span>{member.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {member.daysSinceVisit} days
+                            </span>
+                          </Link>
+                        ))}
+                        {hiddenCount > 0 && (
+                          <button
+                            onClick={() => toggleTrainerExpansion(`churned-${trainerId}`)}
+                            className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1"
+                          >
+                            {isTrainerExpanded ? (
+                              <>
+                                <ChevronDown className="h-3 w-3" />
+                                Show less
+                              </>
+                            ) : (
+                              <>
+                                <ChevronRight className="h-3 w-3" />
+                                +{hiddenCount} more
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </AlertSection>
             )}
 
@@ -250,12 +308,13 @@ export function AlertsWidget() {
                     expandedSection === "contracts" ? null : "contracts"
                   )
                 }
+                viewAllLink="/contracts?status=expiring"
               >
                 <div className="space-y-1">
-                  {expiringContracts.slice(0, 5).map((contract) => (
+                  {expiringContracts.slice(0, showAllContracts ? expiringContracts.length : 5).map((contract) => (
                     <Link
                       key={contract.id}
-                      href={`/members/${contract.memberId}`}
+                      href={`/contracts/${contract.id}`}
                       className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted/50 text-sm"
                     >
                       <span>
@@ -267,9 +326,22 @@ export function AlertsWidget() {
                     </Link>
                   ))}
                   {expiringContracts.length > 5 && (
-                    <p className="text-xs text-muted-foreground px-2">
-                      +{expiringContracts.length - 5} more
-                    </p>
+                    <button
+                      onClick={() => setShowAllContracts(!showAllContracts)}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1"
+                    >
+                      {showAllContracts ? (
+                        <>
+                          <ChevronDown className="h-3 w-3" />
+                          Show less
+                        </>
+                      ) : (
+                        <>
+                          <ChevronRight className="h-3 w-3" />
+                          +{expiringContracts.length - 5} more
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
               </AlertSection>
@@ -300,6 +372,7 @@ function AlertSection({
   variant,
   isExpanded,
   onToggle,
+  viewAllLink,
   children,
 }: {
   title: string;
@@ -309,6 +382,7 @@ function AlertSection({
   variant: "warning" | "danger" | "info";
   isExpanded: boolean;
   onToggle: () => void;
+  viewAllLink?: string;
   children: React.ReactNode;
 }) {
   const variantStyles = {
@@ -351,7 +425,18 @@ function AlertSection({
         </div>
       </button>
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-current/20">{children}</div>
+        <div className="mt-3 pt-3 border-t border-current/20">
+          {children}
+          {viewAllLink && (
+            <Link
+              href={viewAllLink}
+              className="flex items-center justify-center gap-1 mt-3 pt-2 border-t border-current/10 text-xs font-medium hover:underline"
+            >
+              View full list
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );

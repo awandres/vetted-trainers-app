@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtSessions, vtMembers, vtTrainers, eq, desc, sql, and, gte, lte } from "@vt/db";
+import { db, vtSessions, vtMembers, vtTrainers, eq, desc, asc, sql, and, gte, lte } from "@vt/db";
 import { getServerSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const type = searchParams.get("type"); // "upcoming" or "recent"
 
     // Get the trainer ID for this user
     let trainerId = session.user.trainerId;
@@ -43,6 +44,14 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(vtSessions.trainerId, trainerId));
     }
     
+    // Handle type parameter for upcoming/recent sessions
+    const today = new Date().toISOString().split("T")[0];
+    if (type === "upcoming") {
+      conditions.push(gte(vtSessions.sessionDate, today));
+    } else if (type === "recent") {
+      conditions.push(lte(vtSessions.sessionDate, today));
+    }
+    
     if (startDate) {
       conditions.push(gte(vtSessions.sessionDate, startDate));
     }
@@ -51,7 +60,9 @@ export async function GET(request: NextRequest) {
       conditions.push(lte(vtSessions.sessionDate, endDate));
     }
 
-    // Build query
+    // Build query - ascending for upcoming, descending for recent
+    const orderDirection = type === "upcoming" ? asc(vtSessions.sessionDate) : desc(vtSessions.sessionDate);
+    
     const sessions = await db
       .select({
         id: vtSessions.id,
@@ -67,7 +78,7 @@ export async function GET(request: NextRequest) {
       .from(vtSessions)
       .leftJoin(vtMembers, eq(vtSessions.memberId, vtMembers.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(vtSessions.sessionDate))
+      .orderBy(orderDirection)
       .limit(limit);
 
     return NextResponse.json({ sessions });

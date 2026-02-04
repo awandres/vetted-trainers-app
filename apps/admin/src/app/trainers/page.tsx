@@ -215,7 +215,11 @@ export default function TrainersPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredTrainers.map((trainer) => (
-                      <TableRow key={trainer.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableRow 
+                        key={trainer.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => window.location.href = `/trainers/${trainer.id}`}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -271,7 +275,7 @@ export default function TrainersPage() {
                             {trainer.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <Link href={`/trainers/${trainer.id}`}>
                             <Button variant="ghost" size="sm">
                               View

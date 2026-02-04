@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   Users,
@@ -10,12 +11,15 @@ import {
   Activity,
   FileText,
   PieChart,
+  Mail,
+  Send,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@vt/ui";
 import { AlertsWidget } from "@/components/AlertsWidget";
 import { UserMenu } from "@/components/UserMenu";
 import { TrainerDashboard } from "@/components/TrainerDashboard";
-import { db, vtMembers, vtSessions, eq, sql, and, gte } from "@vt/db";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { db, vtMembers, vtSessions, vtEmailCampaigns, eq, sql, and, gte, desc } from "@vt/db";
 import { getServerSession } from "@/lib/auth";
 
 const modules = [
@@ -81,7 +85,69 @@ const modules = [
     href: "/website",
     icon: Globe,
   },
+  {
+    title: "Marketing",
+    description: "Email campaigns, templates, and audience segments",
+    href: "/marketing",
+    icon: Mail,
+    highlight: true,
+  },
 ];
+
+async function getCampaignStats() {
+  try {
+    // Get recent campaigns
+    const recentCampaigns = await db
+      .select({
+        id: vtEmailCampaigns.id,
+        name: vtEmailCampaigns.name,
+        status: vtEmailCampaigns.status,
+        sentCount: vtEmailCampaigns.sentCount,
+        openedCount: vtEmailCampaigns.openedCount,
+        clickedCount: vtEmailCampaigns.clickedCount,
+        scheduledAt: vtEmailCampaigns.scheduledAt,
+        sentAt: vtEmailCampaigns.sentAt,
+        createdAt: vtEmailCampaigns.createdAt,
+      })
+      .from(vtEmailCampaigns)
+      .orderBy(desc(vtEmailCampaigns.createdAt))
+      .limit(3);
+
+    // Get campaign counts by status
+    const statusCounts = await db
+      .select({
+        status: vtEmailCampaigns.status,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(vtEmailCampaigns)
+      .groupBy(vtEmailCampaigns.status);
+
+    const counts = {
+      draft: 0,
+      scheduled: 0,
+      sent: 0,
+      total: 0,
+    };
+
+    for (const row of statusCounts) {
+      if (row.status === "draft") counts.draft = row.count;
+      else if (row.status === "scheduled") counts.scheduled = row.count;
+      else if (row.status === "sent") counts.sent = row.count;
+      counts.total += row.count;
+    }
+
+    return {
+      recentCampaigns,
+      counts,
+    };
+  } catch (error) {
+    console.error("Error fetching campaign stats:", error);
+    return {
+      recentCampaigns: [],
+      counts: { draft: 0, scheduled: 0, sent: 0, total: 0 },
+    };
+  }
+}
 
 async function getQuickStats() {
   try {
@@ -144,9 +210,16 @@ async function getQuickStats() {
 }
 
 export default async function AdminDashboard() {
-  const [stats, session] = await Promise.all([
+  const session = await getServerSession();
+  
+  // Redirect to login if not authenticated
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const [stats, campaignStats] = await Promise.all([
     getQuickStats(),
-    getServerSession(),
+    getCampaignStats(),
   ]);
 
   const isTrainer = session?.user?.role === "trainer";
@@ -156,14 +229,14 @@ export default async function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-primary">Vetted Trainers</h1>
-              <p className="text-sm text-muted-foreground">{portalTitle}</p>
+            <div className="pl-12 lg:pl-0">
+              <h1 className="text-xl font-bold">{portalTitle}</h1>
             </div>
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-2">
+              <ThemeToggle />
               <UserMenu />
             </nav>
           </div>
@@ -296,6 +369,146 @@ export default async function AdminDashboard() {
 
           {/* Alerts Widget */}
           <AlertsWidget />
+        </div>
+
+        {/* Marketing Campaigns Widget */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
+              Email Campaigns
+            </h3>
+            <Link href="/marketing">
+              <button className="text-sm text-primary hover:underline">
+                View all →
+              </button>
+            </Link>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-4">
+            {/* Stats Cards */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Campaigns</p>
+                    <p className="text-3xl font-bold">{campaignStats.counts.total}</p>
+                  </div>
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Sent</p>
+                    <p className="text-3xl font-bold text-green-600">{campaignStats.counts.sent}</p>
+                  </div>
+                  <div className="rounded-full bg-green-500/10 p-3">
+                    <Send className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Scheduled</p>
+                    <p className="text-3xl font-bold text-blue-600">{campaignStats.counts.scheduled}</p>
+                  </div>
+                  <div className="rounded-full bg-blue-500/10 p-3">
+                    <Activity className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Drafts</p>
+                    <p className="text-3xl font-bold text-amber-600">{campaignStats.counts.draft}</p>
+                  </div>
+                  <div className="rounded-full bg-amber-500/10 p-3">
+                    <FileText className="h-6 w-6 text-amber-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Campaigns */}
+          {campaignStats.recentCampaigns.length > 0 && (
+            <div className="mt-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Recent Campaigns</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {campaignStats.recentCampaigns.map((campaign) => (
+                      <Link key={campaign.id} href={`/marketing/${campaign.id}`}>
+                        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${
+                              campaign.status === "sent" ? "bg-green-500" :
+                              campaign.status === "scheduled" ? "bg-blue-500" :
+                              campaign.status === "draft" ? "bg-amber-500" :
+                              "bg-gray-400"
+                            }`} />
+                            <div>
+                              <p className="font-medium text-sm">{campaign.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {campaign.status === "sent" && campaign.sentAt
+                                  ? `Sent ${new Date(campaign.sentAt).toLocaleDateString()}`
+                                  : campaign.status === "scheduled" && campaign.scheduledAt
+                                  ? `Scheduled for ${new Date(campaign.scheduledAt).toLocaleDateString()}`
+                                  : `Draft • ${new Date(campaign.createdAt!).toLocaleDateString()}`
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          {campaign.status === "sent" && (
+                            <div className="text-right text-xs">
+                              <p className="font-medium">{campaign.sentCount} sent</p>
+                              <p className="text-muted-foreground">
+                                {campaign.openedCount || 0} opens · {campaign.clickedCount || 0} clicks
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {campaignStats.recentCampaigns.length === 0 && (
+            <div className="mt-4">
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <Mail className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="font-medium">No campaigns yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Create your first email campaign to engage with members
+                  </p>
+                  <Link href="/marketing/new">
+                    <button className="mt-4 inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                      <Send className="h-4 w-4" />
+                      Create Campaign
+                    </button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Module Grid */}

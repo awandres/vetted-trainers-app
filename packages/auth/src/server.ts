@@ -102,10 +102,12 @@ export const auth = betterAuth({
   // Advanced configuration
   advanced: {
     generateId: () => crypto.randomUUID() as any,
+    // Use secure cookies only in production (HTTPS required)
     useSecureCookies: process.env.NODE_ENV === "production",
+    // Use lax for same-origin development, none for cross-origin (requires HTTPS)
     cookieSameSite: "lax",
     crossSubDomainCookies: {
-      enabled: true, // Enable for vettedtrainers.com subdomains
+      enabled: process.env.NODE_ENV === "production",
       domain: process.env.NODE_ENV === "production" ? ".vettedtrainers.com" : undefined,
     },
   } as any,

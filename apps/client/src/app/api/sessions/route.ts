@@ -1,57 +1,99 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtMembers, vtVisits, vtTrainers, eq, desc } from "@vt/db";
-import { auth } from "@vt/auth";
-import { headers } from "next/headers";
+import { db, vtMembers, vtSessions, vtTrainers, users, sessions, eq, desc, and, gt } from "@vt/db";
 
 export async function GET(request: NextRequest) {
   try {
-    // Get current session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Get session token from cookies
+    let sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json({ error: "No session token" }, { status: 401 });
     }
 
-    // Find member linked to this user's email
-    const [member] = await db
-      .select({ id: vtMembers.id })
-      .from(vtMembers)
-      .where(eq(vtMembers.email, session.user.email));
+    // Better Auth signs cookies with format: token.signature
+    // We need just the token part (before the dot)
+    if (sessionToken.includes(".")) {
+      sessionToken = sessionToken.split(".")[0];
+    }
 
-    if (!member) {
+    // Look up session in database
+    const [session] = await db
+      .select({ userId: sessions.userId })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, sessionToken),
+          gt(sessions.expiresAt, new Date())
+        )
+      );
+
+    if (!session) {
+      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+    }
+
+    // Get user with memberId
+    const [user] = await db
+      .select({ memberId: users.memberId, email: users.email })
+      .from(users)
+      .where(eq(users.id, session.userId));
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
+    let memberId = user.memberId;
+
+    // If no memberId on user, try to find by email
+    if (!memberId && user.email) {
+      const [member] = await db
+        .select({ id: vtMembers.id })
+        .from(vtMembers)
+        .where(eq(vtMembers.email, user.email));
+      memberId = member?.id;
+    }
+
+    if (!memberId) {
       return NextResponse.json({ error: "No member profile found" }, { status: 404 });
     }
 
     // Get sessions for this member
-    const sessions = await db
+    const memberSessions = await db
       .select({
-        id: vtVisits.id,
-        visitDate: vtVisits.visitDate,
-        sessionType: vtVisits.sessionType,
-        notes: vtVisits.notes,
-        trainerName: vtTrainers.name,
+        id: vtSessions.id,
+        visitDate: vtSessions.sessionDate,
+        sessionType: vtSessions.sessionType,
+        notes: vtSessions.notes,
+        trainerFirstName: vtTrainers.firstName,
+        trainerLastName: vtTrainers.lastName,
       })
-      .from(vtVisits)
-      .leftJoin(vtTrainers, eq(vtVisits.trainerId, vtTrainers.id))
-      .where(eq(vtVisits.memberId, member.id))
-      .orderBy(desc(vtVisits.visitDate))
+      .from(vtSessions)
+      .leftJoin(vtTrainers, eq(vtSessions.trainerId, vtTrainers.id))
+      .where(eq(vtSessions.memberId, memberId))
+      .orderBy(desc(vtSessions.sessionDate))
       .limit(50);
+
+    // Format sessions
+    const formattedSessions = memberSessions.map(s => ({
+      id: s.id,
+      visitDate: s.visitDate,
+      sessionType: s.sessionType,
+      notes: s.notes,
+      trainerName: s.trainerFirstName ? `${s.trainerFirstName} ${s.trainerLastName || ''}`.trim() : "Trainer",
+    }));
 
     // Calculate stats
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const sessionsThisMonth = sessions.filter((s) => 
+    const sessionsThisMonth = formattedSessions.filter((s) => 
       s.visitDate && new Date(s.visitDate) >= thisMonth
     ).length;
 
     return NextResponse.json({
-      sessions,
+      sessions: formattedSessions,
       stats: {
-        total: sessions.length,
+        total: formattedSessions.length,
         thisMonth: sessionsThisMonth,
-        lastSession: sessions[0]?.visitDate || null,
+        lastSession: formattedSessions[0]?.visitDate || null,
       },
     });
   } catch (error) {

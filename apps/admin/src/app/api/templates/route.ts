@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtWorkoutTemplates, vtWorkoutTemplateExercises, vtExercises, vtTrainers, eq, desc, or } from "@vt/db";
+import { db, vtWorkoutTemplates, vtWorkoutTemplateExercises, vtExercises, vtTrainers, eq, desc, or, sql } from "@vt/db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const trainerId = searchParams.get("trainerId");
 
   try {
-    // Get templates that are either public or created by the current trainer
+    // Get templates - show all for now (public or created by any trainer)
     const templates = await db
       .select({
         id: vtWorkoutTemplates.id,
@@ -14,20 +14,13 @@ export async function GET(request: NextRequest) {
         description: vtWorkoutTemplates.description,
         isPublic: vtWorkoutTemplates.isPublic,
         createdByTrainerId: vtWorkoutTemplates.createdByTrainerId,
-        trainerName: vtTrainers.name,
+        trainerFirstName: vtTrainers.firstName,
+        trainerLastName: vtTrainers.lastName,
         createdAt: vtWorkoutTemplates.createdAt,
         updatedAt: vtWorkoutTemplates.updatedAt,
       })
       .from(vtWorkoutTemplates)
       .leftJoin(vtTrainers, eq(vtWorkoutTemplates.createdByTrainerId, vtTrainers.id))
-      .where(
-        trainerId
-          ? or(
-              eq(vtWorkoutTemplates.isPublic, true),
-              eq(vtWorkoutTemplates.createdByTrainerId, trainerId)
-            )
-          : eq(vtWorkoutTemplates.isPublic, true)
-      )
       .orderBy(desc(vtWorkoutTemplates.createdAt));
 
     // Get exercises for each template
@@ -51,7 +44,17 @@ export async function GET(request: NextRequest) {
           .where(eq(vtWorkoutTemplateExercises.templateId, template.id))
           .orderBy(vtWorkoutTemplateExercises.orderIndex);
 
-        return { ...template, exercises, exerciseCount: exercises.length };
+        // Format trainer name
+        const trainerName = template.trainerFirstName && template.trainerLastName
+          ? `${template.trainerFirstName} ${template.trainerLastName}`
+          : null;
+
+        return { 
+          ...template, 
+          trainerName,
+          exercises, 
+          exerciseCount: exercises.length 
+        };
       })
     );
 

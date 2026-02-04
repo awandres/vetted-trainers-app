@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Button,
   Card,
@@ -118,7 +119,7 @@ function StatusBadge({ status }: { status: string }) {
     active: "bg-green-500/10 text-green-600 border-green-500/30",
     completed: "bg-blue-500/10 text-blue-600 border-blue-500/30",
     cancelled: "bg-red-500/10 text-red-600 border-red-500/30",
-    expired: "bg-gray-500/10 text-gray-600 border-gray-500/30",
+    expired: "bg-background0/10 text-gray-600 border-gray-500/30",
   };
 
   return (
@@ -159,6 +160,7 @@ function ExpiryBadge({ daysUntil }: { daysUntil: number | null }) {
 }
 
 export default function ContractsPage() {
+  const searchParams = useSearchParams();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [stats, setStats] = useState<Stats>({ active: 0, completed: 0, cancelled: 0, total: 0, expiringSoon: 0 });
   const [isLoading, setIsLoading] = useState(true);
@@ -167,6 +169,16 @@ export default function ContractsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [showExpiringSoon, setShowExpiringSoon] = useState(false);
+
+  // Read URL params on mount
+  useEffect(() => {
+    const urlStatus = searchParams.get("status");
+    if (urlStatus === "expiring") {
+      setShowExpiringSoon(true);
+    } else if (urlStatus && urlStatus !== "all") {
+      setStatusFilter(urlStatus);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function fetchData() {
@@ -409,8 +421,12 @@ export default function ContractsPage() {
                     {filteredContracts.map((contract) => {
                       const daysUntil = getDaysUntilExpiry(contract.endDate);
                       return (
-                        <TableRow key={contract.id} className="hover:bg-muted/50">
-                          <TableCell>
+                        <TableRow 
+                          key={contract.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => window.location.href = `/contracts/${contract.id}`}
+                        >
+                          <TableCell onClick={(e) => e.stopPropagation()}>
                             {contract.member ? (
                               <Link
                                 href={`/members/${contract.member.id}`}
@@ -449,10 +465,12 @@ export default function ContractsPage() {
                           <TableCell>
                             <StatusBadge status={contract.status} />
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              View
-                            </Button>
+                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/contracts/${contract.id}`}>
+                              <Button variant="ghost" size="sm">
+                                View
+                              </Button>
+                            </Link>
                           </TableCell>
                         </TableRow>
                       );

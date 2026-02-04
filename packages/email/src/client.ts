@@ -23,7 +23,8 @@ export interface SendEmailResult {
 }
 
 // Default from address
-const DEFAULT_FROM = process.env.EMAIL_FROM || "Vetted Trainers <noreply@vettedtrainers.com>";
+// Use Resend's test domain for development, or a verified domain for production
+const DEFAULT_FROM = process.env.EMAIL_FROM || "Vetted Trainers <onboarding@resend.dev>";
 
 /**
  * Send an email using Resend

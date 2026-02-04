@@ -162,7 +162,13 @@ export default function PromotionTemplate({
 
       {/* Body Content */}
       <Section>
-        <Text style={bodyText}>{bodyContent}</Text>
+        {bodyContent && bodyContent.split('\n').map((paragraph, index) => (
+          paragraph.trim() ? (
+            <Text key={index} style={bodyText}>{paragraph}</Text>
+          ) : (
+            <div key={index} style={{ height: '8px' }} />
+          )
+        ))}
       </Section>
 
       {/* CTA Button */}

@@ -10,4 +10,4 @@ export * from "./schema";
 export { createId, slugify } from "./utils";
 
 // Re-export commonly used drizzle-orm functions
-export { eq, and, or, not, desc, asc, sql, gt, gte, lt, lte, like, ilike, inArray, count } from "drizzle-orm";
+export { eq, and, or, not, desc, asc, sql, gt, gte, lt, lte, like, ilike, inArray, count, isNull, isNotNull } from "drizzle-orm";

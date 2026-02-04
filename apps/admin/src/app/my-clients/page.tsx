@@ -59,7 +59,7 @@ export default function MyClientsPage() {
       case "inactive": return "text-amber-500 bg-amber-500/10 border-amber-500/30";
       case "churned": return "text-red-500 bg-red-500/10 border-red-500/30";
       case "paused": return "text-blue-500 bg-blue-500/10 border-blue-500/30";
-      default: return "text-gray-500 bg-gray-500/10 border-gray-500/30";
+      default: return "text-gray-500 bg-background0/10 border-gray-500/30";
     }
   };
 

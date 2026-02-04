@@ -17,14 +17,17 @@ interface BaseTemplateProps {
   children: React.ReactNode;
 }
 
-// Brand colors
+// VT Brand colors
 const colors = {
-  primary: "#1a1a1a",
-  secondary: "#666666",
-  accent: "#E53935",
-  background: "#f4f4f4",
+  primary: "#1a1a1a",         // Dark graphite for text
+  secondary: "#6b7280",       // Muted gray for secondary text
+  accent: "#2563eb",          // VT Blue (primary brand color)
+  accentDark: "#1d4ed8",      // Darker blue for hover states
+  background: "#f3f4f6",      // Light gray background
   white: "#ffffff",
-  border: "#e0e0e0",
+  border: "#e5e7eb",
+  graphite: "#374151",        // VT Graphite
+  success: "#10b981",         // Green for success states
 };
 
 // Styles
@@ -47,11 +50,6 @@ const content = {
   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
 };
 
-const logo = {
-  margin: "0 auto 24px",
-  display: "block",
-};
-
 const footer = {
   marginTop: "32px",
   textAlign: "center" as const,
@@ -69,14 +67,17 @@ const footerLink = {
   textDecoration: "underline",
 };
 
-const socialLinks = {
+const socialLinksContainer = {
+  textAlign: "center" as const,
   margin: "16px 0",
 };
 
-const socialIcon = {
-  width: "24px",
-  height: "24px",
-  margin: "0 8px",
+const socialLinksTable = {
+  margin: "0 auto",
+};
+
+const socialIconCell = {
+  padding: "0 8px",
 };
 
 export default function BaseTemplate({
@@ -91,13 +92,15 @@ export default function BaseTemplate({
         <Container style={container}>
           <Section style={content}>
             {/* Logo */}
-            <Img
-              src="https://vettedtrainers.com/images/vetted-logo.png"
-              width="180"
-              height="auto"
-              alt="Vetted Trainers"
-              style={logo}
-            />
+            <Section style={{ textAlign: "center", marginBottom: "24px" }}>
+              <Img
+                src="https://vettedtrainers.com/images/vetted-logo.png"
+                width="180"
+                height="auto"
+                alt="Vetted Trainers"
+                style={{ margin: "0 auto", display: "block" }}
+              />
+            </Section>
             
             {/* Content */}
             {children}
@@ -105,27 +108,45 @@ export default function BaseTemplate({
 
           {/* Footer */}
           <Section style={footer}>
-            {/* Social Links */}
-            <div style={socialLinks}>
-              <Link href="https://instagram.com/vettedtrainers">
-                <Img
-                  src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
-                  width="24"
-                  height="24"
-                  alt="Instagram"
-                  style={socialIcon}
-                />
-              </Link>
-              <Link href="https://facebook.com/vettedtrainers">
-                <Img
-                  src="https://cdn-icons-png.flaticon.com/512/174/174848.png"
-                  width="24"
-                  height="24"
-                  alt="Facebook"
-                  style={socialIcon}
-                />
-              </Link>
-            </div>
+            {/* Social Links - Using table for proper horizontal alignment */}
+            <Section style={socialLinksContainer}>
+              <table style={socialLinksTable}>
+                <tbody>
+                  <tr>
+                    <td style={socialIconCell}>
+                      <Link href="https://instagram.com/vettedtrainers">
+                        <Img
+                          src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
+                          width="28"
+                          height="28"
+                          alt="Instagram"
+                        />
+                      </Link>
+                    </td>
+                    <td style={socialIconCell}>
+                      <Link href="https://facebook.com/vettedtrainers">
+                        <Img
+                          src="https://cdn-icons-png.flaticon.com/512/174/174848.png"
+                          width="28"
+                          height="28"
+                          alt="Facebook"
+                        />
+                      </Link>
+                    </td>
+                    <td style={socialIconCell}>
+                      <Link href="https://youtube.com/@vettedtrainers">
+                        <Img
+                          src="https://cdn-icons-png.flaticon.com/512/174/174883.png"
+                          width="28"
+                          height="28"
+                          alt="YouTube"
+                        />
+                      </Link>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </Section>
 
             <Text style={footerText}>
               Vetted Trainers • Premier Personal Training

@@ -62,6 +62,9 @@ importers:
       '@vt/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@vt/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@vt/ui':
         specifier: workspace:*
         version: link:../../packages/ui

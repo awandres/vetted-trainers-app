@@ -642,7 +642,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
                             <div className="space-y-3">
                                 {member.prescriptions.map((prescription) => {
                                     const statusConfig = {
-                                        draft: { label: "Draft", icon: FileText, color: "bg-gray-500/10 text-gray-600" },
+                                        draft: { label: "Draft", icon: FileText, color: "bg-background0/10 text-gray-600" },
                                         sent: { label: "Sent", icon: Send, color: "bg-blue-500/10 text-blue-600" },
                                         viewed: { label: "Viewed", icon: Eye, color: "bg-green-500/10 text-green-600" },
                                     }[prescription.status] || { label: prescription.status, icon: FileText, color: "" };

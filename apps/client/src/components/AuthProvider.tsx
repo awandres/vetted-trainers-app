@@ -55,8 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserAndMember = async () => {
     try {
-      // Fetch current session/user
-      const sessionRes = await fetch("/api/auth/session", {
+      // Fetch current session/user (Better Auth uses get-session)
+      const sessionRes = await fetch("/api/auth/get-session", {
         credentials: "include",
       });
       
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setMember(null);
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   const refreshMember = async () => {

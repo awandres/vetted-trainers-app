@@ -13,13 +13,11 @@ import {
   Badge,
 } from "@vt/ui";
 import {
-  ArrowLeft,
   Dumbbell,
   Calendar,
   ChevronRight,
   FileText,
   Loader2,
-  CheckCircle,
   Send,
   Eye,
 } from "lucide-react";
@@ -73,124 +71,116 @@ export default function PrescriptionsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#3b82f6]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
-                <Dumbbell className="h-5 w-5" />
-                My Prescriptions
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Your exercise routines and workout plans
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="p-4 lg:p-8">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+          <Dumbbell className="h-8 w-8 text-[#3b82f6]" />
+          My Prescriptions
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Your exercise routines and workout plans
+        </p>
+      </div>
 
-      <main className="container mx-auto px-4 py-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : prescriptions.length === 0 ? (
-          <div className="text-center py-16">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No prescriptions yet</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-[#3b82f6]" />
+        </div>
+      ) : prescriptions.length === 0 ? (
+        <Card className="bg-[#353840] border-[#454850]">
+          <CardContent className="py-16 text-center">
+            <FileText className="h-16 w-16 mx-auto text-gray-500 mb-4" />
+            <h2 className="text-xl font-semibold mb-2 text-white">No prescriptions yet</h2>
+            <p className="text-gray-400 max-w-md mx-auto">
               Your trainer will send you personalized exercise plans and workout
               routines. They'll appear here when ready.
             </p>
             <Link href="/">
-              <Button variant="outline" className="mt-6">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="mt-6 border-[#454850] text-gray-300 hover:bg-[#2a2d36]">
                 Back to Dashboard
               </Button>
             </Link>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {prescriptions.map((prescription) => {
-              const isNew = prescription.status === "sent";
-              
-              return (
-                <Link
-                  key={prescription.id}
-                  href={`/prescriptions/${prescription.id}`}
-                  className="block"
-                >
-                  <Card className="h-full hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden">
-                    {isNew && (
-                      <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-lg font-medium">
-                        NEW
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {prescriptions.map((prescription) => {
+            const isNew = prescription.status === "sent";
+            
+            return (
+              <Link
+                key={prescription.id}
+                href={`/prescriptions/${prescription.id}`}
+                className="block"
+              >
+                <Card className="h-full hover:bg-[#3a3d46] transition-colors cursor-pointer relative overflow-hidden bg-[#353840] border-[#454850]">
+                  {isNew && (
+                    <div className="absolute top-0 right-0 bg-[#3b82f6] text-white text-xs px-3 py-1 rounded-bl-lg font-medium">
+                      NEW
+                    </div>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-lg bg-[#3b82f6]/10 p-3 flex-shrink-0">
+                        <Dumbbell className="h-6 w-6 text-[#3b82f6]" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg truncate text-white">
+                          {prescription.name || "Exercise Prescription"}
+                        </CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1 text-gray-400">
+                          <span>{prescription.exerciseCount} exercises</span>
+                        </CardDescription>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {prescription.notes && (
+                      <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+                        {prescription.notes}
+                      </p>
                     )}
-                    <CardHeader>
-                      <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-primary/10 p-3 flex-shrink-0">
-                          <Dumbbell className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg truncate">
-                            {prescription.name || "Exercise Prescription"}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-2 mt-1">
-                            <span>{prescription.exerciseCount} exercises</span>
-                          </CardDescription>
-                        </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(prescription.sentAt)}
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      {prescription.notes && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {prescription.notes}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(prescription.sentAt)}
-                        </div>
-                        <Badge 
-                          variant={isNew ? "default" : "secondary"}
-                          className="flex items-center gap-1"
-                        >
-                          {isNew ? (
-                            <>
-                              <Send className="h-3 w-3" />
-                              New
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="h-3 w-3" />
-                              Viewed
-                            </>
-                          )}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </main>
+                      <Badge 
+                        variant={isNew ? "default" : "secondary"}
+                        className={`flex items-center gap-1 ${
+                          isNew 
+                            ? "bg-[#3b82f6] text-white" 
+                            : "bg-[#454850] text-gray-300"
+                        }`}
+                      >
+                        {isNew ? (
+                          <>
+                            <Send className="h-3 w-3" />
+                            New
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-3 w-3" />
+                            Viewed
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

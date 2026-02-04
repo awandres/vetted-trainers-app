@@ -1,26 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, vtMembers, vtPrescriptions, vtPrescriptionExercises, vtExercises, eq, desc, and, or } from "@vt/db";
-import { auth } from "@vt/auth";
-import { headers } from "next/headers";
+import { db, vtMembers, vtPrescriptions, vtPrescriptionExercises, users, sessions, eq, desc, and, or, gt } from "@vt/db";
 
 export async function GET(request: NextRequest) {
   try {
-    // Get current session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Get session token from cookies
+    let sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json({ error: "No session token" }, { status: 401 });
     }
 
-    // Find member linked to this user's email
-    const [member] = await db
-      .select({ id: vtMembers.id })
-      .from(vtMembers)
-      .where(eq(vtMembers.email, session.user.email));
+    // Better Auth signs cookies with format: token.signature
+    // We need just the token part (before the dot)
+    if (sessionToken.includes(".")) {
+      sessionToken = sessionToken.split(".")[0];
+    }
 
-    if (!member) {
+    // Look up session in database
+    const [session] = await db
+      .select({ userId: sessions.userId })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, sessionToken),
+          gt(sessions.expiresAt, new Date())
+        )
+      );
+
+    if (!session) {
+      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+    }
+
+    // Get user with memberId
+    const [user] = await db
+      .select({ memberId: users.memberId, email: users.email })
+      .from(users)
+      .where(eq(users.id, session.userId));
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
+    let memberId = user.memberId;
+
+    // If no memberId on user, try to find by email
+    if (!memberId && user.email) {
+      const [member] = await db
+        .select({ id: vtMembers.id })
+        .from(vtMembers)
+        .where(eq(vtMembers.email, user.email));
+      memberId = member?.id;
+    }
+
+    if (!memberId) {
       return NextResponse.json({ error: "No member profile found" }, { status: 404 });
     }
 
@@ -38,7 +70,7 @@ export async function GET(request: NextRequest) {
       .from(vtPrescriptions)
       .where(
         and(
-          eq(vtPrescriptions.memberId, member.id),
+          eq(vtPrescriptions.memberId, memberId),
           or(
             eq(vtPrescriptions.status, "sent"),
             eq(vtPrescriptions.status, "viewed")

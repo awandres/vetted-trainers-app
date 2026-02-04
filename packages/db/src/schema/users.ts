@@ -1,11 +1,12 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createId } from "../utils";
 
 // VT-specific user roles
+// - super_admin: Owner/highest level access (can manage other admins)
 // - admin: Full CRM access + website editing
 // - trainer: Limited CRM (their members only)
 // - member: Client portal only
-export const userRoles = ["admin", "trainer", "member"] as const;
+export const userRoles = ["super_admin", "admin", "trainer", "member"] as const;
 export type UserRole = (typeof userRoles)[number];
 
 // Users table
@@ -18,7 +19,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   phone: text("phone"),
   
-  // VT role (admin, trainer, member)
+  // VT role (super_admin, admin, trainer, member)
   role: text("role", { enum: userRoles }).default("member").notNull(),
   
   // Link to trainer record (for trainer role users)
@@ -30,6 +31,14 @@ export const users = pgTable("users", {
   // Account status
   emailVerified: boolean("email_verified").default(false),
   image: text("image"),
+  
+  // Time-limited access (for demo/trial users)
+  // When set, user will be auto-logged out after this duration (in minutes) from login
+  accessDurationMinutes: integer("access_duration_minutes"),
+  // When set, user cannot access the app after this timestamp
+  accessExpiresAt: timestamp("access_expires_at", { withTimezone: true }),
+  // Flag to quickly disable access
+  accessDisabled: boolean("access_disabled").default(false),
   
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),

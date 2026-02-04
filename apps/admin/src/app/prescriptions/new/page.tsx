@@ -26,6 +26,7 @@ import {
   Repeat,
   Sparkles,
   Move,
+  Wand2,
 } from "lucide-react";
 import {
   Button,
@@ -119,6 +120,7 @@ function ExerciseBuilderCard({
   onMoveUp,
   onMoveDown,
   onUpdate,
+  onViewDetails,
   isFirst,
   isLast,
 }: {
@@ -128,6 +130,7 @@ function ExerciseBuilderCard({
   onMoveUp: () => void;
   onMoveDown: () => void;
   onUpdate: (updates: Partial<PrescriptionExercise>) => void;
+  onViewDetails: () => void;
   isFirst: boolean;
   isLast: boolean;
 }) {
@@ -168,7 +171,12 @@ function ExerciseBuilderCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h4 className="font-medium">{item.exercise.name}</h4>
+                <button
+                  onClick={onViewDetails}
+                  className="font-medium text-left hover:text-primary hover:underline transition-colors"
+                >
+                  {item.exercise.name}
+                </button>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className={`text-xs ${config.color}`}>
                     <Icon className="h-3 w-3 mr-1" />
@@ -180,8 +188,13 @@ function ExerciseBuilderCard({
                     </Badge>
                   )}
                   {item.exercise.videoUrl && (
-                    <Badge variant="outline" className="text-xs gap-1">
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs gap-1 cursor-pointer hover:bg-primary/10"
+                      onClick={onViewDetails}
+                    >
                       <Play className="h-3 w-3" />
+                      Video
                     </Badge>
                   )}
                 </div>
@@ -355,6 +368,92 @@ function SaveAsTemplateDialog({
   );
 }
 
+// Template card with expandable exercises
+function TemplateCard({
+  template,
+  onSelect,
+}: {
+  template: WorkoutTemplate;
+  onSelect: (template: WorkoutTemplate) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="hover:shadow-md hover:border-primary/50 transition-all">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <h4 className="font-medium">{template.name}</h4>
+            {template.description && (
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                {template.description}
+              </p>
+            )}
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary">
+                {template.exerciseCount} exercise{template.exerciseCount !== 1 ? "s" : ""}
+              </Badge>
+              {template.isPublic && (
+                <Badge variant="outline">Public</Badge>
+              )}
+              {template.trainerName && (
+                <span className="text-xs text-muted-foreground">
+                  by {template.trainerName}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }}
+            >
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {expanded ? "Hide" : "Show"}
+            </Button>
+            <Button size="sm" onClick={() => onSelect(template)}>
+              Use This
+            </Button>
+          </div>
+        </div>
+
+        {/* Expandable exercise list */}
+        {expanded && template.exercises && template.exercises.length > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">Exercises in this template:</p>
+            <div className="space-y-2">
+              {template.exercises.map((ex, index) => {
+                const config = CATEGORIES[ex.category as keyof typeof CATEGORIES] || CATEGORIES.mobility;
+                const Icon = config.icon;
+                return (
+                  <div key={ex.id} className="flex items-center gap-3 text-sm">
+                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </span>
+                    <Badge variant="outline" className={`text-xs ${config.color}`}>
+                      <Icon className="h-3 w-3" />
+                    </Badge>
+                    <span className="flex-1 truncate">{ex.name}</span>
+                    {ex.sets && (
+                      <span className="text-xs text-muted-foreground">
+                        {ex.sets} sets
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Template picker dialog
 function TemplatePickerDialog({
   open,
@@ -371,9 +470,12 @@ function TemplatePickerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Load from Template</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Copy className="h-5 w-5" />
+            Use Template
+          </DialogTitle>
           <DialogDescription>
-            Select a template to pre-fill the prescription with exercises
+            Select a saved template to quickly add exercises to your prescription
           </DialogDescription>
         </DialogHeader>
 
@@ -381,41 +483,20 @@ function TemplatePickerDialog({
           {templates.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No templates available</p>
-              <p className="text-sm mt-2">Create your first template by saving a prescription</p>
+              <p className="text-lg font-medium">No templates yet</p>
+              <p className="text-sm mt-2 max-w-sm mx-auto">
+                Create your first template by building a prescription with exercises, 
+                then click "Save as Template" in the Exercises section.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {templates.map((template) => (
-                <Card
+                <TemplateCard
                   key={template.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onSelect(template)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium">{template.name}</h4>
-                        {template.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {template.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary">
-                            {template.exerciseCount} exercise{template.exerciseCount !== 1 ? "s" : ""}
-                          </Badge>
-                          {template.isPublic && (
-                            <Badge variant="outline">Public</Badge>
-                          )}
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Use Template
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  template={template}
+                  onSelect={onSelect}
+                />
               ))}
             </div>
           )}
@@ -423,7 +504,122 @@ function TemplatePickerDialog({
 
         <DialogFooter className="border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Exercise detail modal
+function ExerciseDetailModal({
+  exercise,
+  open,
+  onOpenChange,
+}: {
+  exercise: VTExercise | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  if (!exercise) return null;
+
+  const config = CATEGORIES[exercise.category] || CATEGORIES.mobility;
+  const Icon = config.icon;
+
+  // Extract YouTube video ID if present
+  const getYouTubeEmbedUrl = (url: string | null) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+  };
+
+  const embedUrl = getYouTubeEmbedUrl(exercise.videoUrl);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${config.color}`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            {exercise.name}
+          </DialogTitle>
+          <div className="flex items-center gap-2 pt-2">
+            <Badge variant="outline" className={config.color}>
+              {config.label}
+            </Badge>
+            {exercise.bodyArea && (
+              <Badge variant="secondary">
+                {exercise.bodyArea.replace("_", " ")}
+              </Badge>
+            )}
+            {exercise.difficultyLevel && (
+              <Badge variant="outline">
+                Level {exercise.difficultyLevel}
+              </Badge>
+            )}
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Video */}
+          {embedUrl && (
+            <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+              <iframe
+                src={embedUrl}
+                title={exercise.name}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          )}
+
+          {/* Description */}
+          {exercise.description && (
+            <div>
+              <h4 className="font-medium mb-2">Description</h4>
+              <p className="text-muted-foreground">{exercise.description}</p>
+            </div>
+          )}
+
+          {/* Coaching Cues */}
+          {exercise.cues && exercise.cues.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-2">Coaching Cues</h4>
+              <ul className="space-y-2">
+                {exercise.cues.map((cue, i) => (
+                  <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{cue}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Video link if no embed */}
+          {exercise.videoUrl && !embedUrl && (
+            <div>
+              <h4 className="font-medium mb-2">Video</h4>
+              <a
+                href={exercise.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline flex items-center gap-2"
+              >
+                <Play className="h-4 w-4" />
+                Watch Video
+              </a>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -564,6 +760,8 @@ export default function PrescriptionBuilderPage() {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [exerciseDetailOpen, setExerciseDetailOpen] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<VTExercise | null>(null);
 
   // Prescription state
   const [selectedMemberId, setSelectedMemberId] = useState<string>(memberId || "");
@@ -766,9 +964,49 @@ export default function PrescriptionBuilderPage() {
   const selectedExerciseIds = new Set(prescriptionItems.map((item) => item.exerciseId));
   const selectedMember = members.find((m) => m.id === selectedMemberId);
 
+  // Dev Autofill function
+  const handleDevAutofill = useCallback(() => {
+    // Select a random member (prefer one with a name)
+    const randomMember = members[Math.floor(Math.random() * members.length)];
+    if (randomMember) {
+      setSelectedMemberId(randomMember.id);
+    }
+
+    // Set prescription name and notes
+    const prescriptionNames = [
+      "Daily Mobility Routine",
+      "Hip Flexibility Program",
+      "Morning Stretch Sequence",
+      "Lower Back Recovery",
+      "Full Body Activation",
+    ];
+    setPrescriptionName(prescriptionNames[Math.floor(Math.random() * prescriptionNames.length)]);
+    setPrescriptionNotes(
+      "Complete this routine daily for best results. Focus on breathing and controlled movements. If any exercise causes pain, skip it and notify your trainer."
+    );
+
+    // Add 4-6 random exercises
+    const numExercises = Math.floor(Math.random() * 3) + 4; // 4-6 exercises
+    const shuffledExercises = [...exercises].sort(() => Math.random() - 0.5);
+    const selectedExercises = shuffledExercises.slice(0, numExercises);
+
+    const items: PrescriptionExercise[] = selectedExercises.map((exercise, index) => ({
+      id: `item-${Date.now()}-${index}`,
+      exerciseId: exercise.id,
+      exercise,
+      sets: Math.floor(Math.random() * 2) + 2, // 2-3 sets
+      reps: ["8-10", "10-12", "12-15", "15"][Math.floor(Math.random() * 4)],
+      duration: ["30s", "45s", "60s", "90s", ""][Math.floor(Math.random() * 5)],
+      notes: "",
+      orderIndex: index,
+    }));
+
+    setPrescriptionItems(items);
+  }, [members, exercises]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -795,15 +1033,23 @@ export default function PrescriptionBuilderPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {templates.length > 0 && (
-                <Button
-                  variant="ghost"
-                  onClick={() => setTemplatePickerOpen(true)}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Load Template
-                </Button>
-              )}
+              {/* Dev Autofill Button - TODO: Make dev-only in production */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDevAutofill}
+                className="border-dashed border-amber-500 text-amber-600 hover:bg-amber-50"
+              >
+                <Wand2 className="h-4 w-4 mr-2" />
+                Dev Autofill
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setTemplatePickerOpen(true)}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Use Template
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => savePrescription("draft")}
@@ -931,6 +1177,10 @@ export default function PrescriptionBuilderPage() {
                       onMoveUp={() => moveExercise(index, "up")}
                       onMoveDown={() => moveExercise(index, "down")}
                       onUpdate={(updates) => updateExercise(item.id, updates)}
+                      onViewDetails={() => {
+                        setSelectedExercise(item.exercise);
+                        setExerciseDetailOpen(true);
+                      }}
                       isFirst={index === 0}
                       isLast={index === prescriptionItems.length - 1}
                     />
@@ -1029,6 +1279,13 @@ export default function PrescriptionBuilderPage() {
         defaultName={prescriptionName || "New Template"}
         onSave={saveAsTemplate}
         isLoading={isSavingTemplate}
+      />
+
+      {/* Exercise Detail Modal */}
+      <ExerciseDetailModal
+        exercise={selectedExercise}
+        open={exerciseDetailOpen}
+        onOpenChange={setExerciseDetailOpen}
       />
     </div>
   );

@@ -82,7 +82,7 @@ interface VTPrescription {
 // Status badge
 function StatusBadge({ status }: { status: string }) {
   const config = {
-    draft: { label: "Draft", className: "bg-gray-500/10 text-gray-600", icon: FileText },
+    draft: { label: "Draft", className: "bg-background0/10 text-gray-600", icon: FileText },
     sent: { label: "Sent", className: "bg-blue-500/10 text-blue-600", icon: Send },
     viewed: { label: "Viewed", className: "bg-green-500/10 text-green-600", icon: Eye },
   }[status] || { label: status, className: "", icon: FileText };

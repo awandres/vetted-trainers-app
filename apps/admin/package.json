@@ -23,6 +23,7 @@
     "@tremor/react": "^3.18.7",
     "@vt/auth": "workspace:*",
     "@vt/db": "workspace:*",
+    "@vt/email": "workspace:*",
     "@vt/ui": "workspace:*",
     "better-auth": "^1.0.0",
     "lucide-react": "^0.460.0",

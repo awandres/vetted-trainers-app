@@ -55,15 +55,15 @@ const bodyText = {
 
 const ctaButton = {
   backgroundColor: colors.accent,
-  borderRadius: "6px",
+  borderRadius: "8px",
   color: "#ffffff",
   fontSize: "16px",
   fontWeight: "600",
   textDecoration: "none",
   textAlign: "center" as const,
   display: "block",
-  padding: "14px 24px",
-  margin: "24px auto",
+  padding: "16px 32px",
+  margin: "32px auto 16px",
 };
 
 const divider = {
@@ -108,7 +108,13 @@ export default function NewsletterTemplate({
 
       {/* Body Content */}
       <Section>
-        <Text style={bodyText}>{bodyContent}</Text>
+        {bodyContent && bodyContent.split('\n').map((paragraph, index) => (
+          paragraph.trim() ? (
+            <Text key={index} style={bodyText}>{paragraph}</Text>
+          ) : (
+            <div key={index} style={{ height: '8px' }} />
+          )
+        ))}
       </Section>
 
       {/* CTA Button */}

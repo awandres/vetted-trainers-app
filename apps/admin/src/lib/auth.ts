@@ -28,13 +28,13 @@ export async function requireAuth() {
 
 /**
  * Require admin role for a page
- * Redirects to login if not authenticated, or home if not admin
+ * Redirects to login if not authenticated, or back to home if not admin
  */
 export async function requireAdmin() {
   const session = await requireAuth();
   
   if (session.user.role !== "admin") {
-    redirect("/?error=unauthorized");
+    redirect("/");
   }
   
   return session;

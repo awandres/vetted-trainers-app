@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Button,
   Card,
@@ -350,11 +351,7 @@ function AlertsWidget({ members }: { members: VTMember[] }) {
                 size="sm"
                 variant="outline"
                 className="border-yellow-500/50 text-yellow-700 hover:bg-yellow-500/10"
-                onClick={() => {
-                  // This would filter to show only inactive
-                  const el = document.getElementById("status-filter") as HTMLSelectElement;
-                  if (el) el.click();
-                }}
+                onClick={() => handleStatusFilterChange("inactive")}
               >
                 View
               </Button>
@@ -374,6 +371,7 @@ function AlertsWidget({ members }: { members: VTMember[] }) {
                 size="sm"
                 variant="outline"
                 className="border-red-500/50 text-red-700 hover:bg-red-500/10"
+                onClick={() => handleStatusFilterChange("churned")}
               >
                 View
               </Button>
@@ -386,6 +384,9 @@ function AlertsWidget({ members }: { members: VTMember[] }) {
 }
 
 export default function MembersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const [members, setMembers] = useState<VTMember[]>([]);
   const [trainers, setTrainers] = useState<VTTrainer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -393,8 +394,23 @@ export default function MembersPage() {
   const [isRecalculating, setIsRecalculating] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Initialize status filter from URL param
+  const [statusFilter, setStatusFilter] = useState<string>(
+    searchParams.get("status") || "all"
+  );
   const [trainerFilter, setTrainerFilter] = useState<string>("all");
+
+  // Update URL when status filter changes
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("status");
+    } else {
+      params.set("status", value);
+    }
+    router.push(`/members?${params.toString()}`, { scroll: false });
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -594,7 +610,7 @@ export default function MembersPage() {
                   />
                 </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                 <SelectTrigger id="status-filter" className="w-[160px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -677,7 +693,11 @@ export default function MembersPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredMembers.map((member) => (
-                      <TableRow key={member.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableRow 
+                        key={member.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => window.location.href = `/members/${member.id}`}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -719,7 +739,7 @@ export default function MembersPage() {
                         <TableCell>
                           <StatusBadge status={member.status} daysSince={member.daysSinceVisit} />
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <Link href={`/members/${member.id}`}>
                             <Button variant="ghost" size="sm">
                               View

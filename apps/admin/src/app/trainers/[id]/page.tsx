@@ -105,7 +105,7 @@ function StatusBadge({ status }: { status: string }) {
         active: "bg-green-500/10 text-green-600 border-green-500/30",
         inactive: "bg-amber-500/10 text-amber-600 border-amber-500/30",
         churned: "bg-red-500/10 text-red-600 border-red-500/30",
-        paused: "bg-gray-500/10 text-gray-600 border-gray-500/30",
+        paused: "bg-background0/10 text-gray-600 border-gray-500/30",
     };
 
     return (
@@ -498,7 +498,7 @@ export default function TrainerDetailPage({ params }: { params: Promise<{ id: st
                                         <p className="text-2xl font-bold text-red-600">{memberStats.churned}</p>
                                         <p className="text-xs text-red-600">Churned</p>
                                     </div>
-                                    <div className="p-3 rounded-lg bg-gray-500/10">
+                                    <div className="p-3 rounded-lg bg-background0/10">
                                         <p className="text-2xl font-bold text-gray-600">{memberStats.paused}</p>
                                         <p className="text-xs text-gray-600">Paused</p>
                                     </div>
