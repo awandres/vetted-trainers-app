@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/login", "/access-expired"];
 
 // API routes that should be accessible without auth (for login, etc.)
 const PUBLIC_API_ROUTES = ["/api/auth"];
+
+// Portal routes (for members only)
+const PORTAL_ROUTES = ["/portal"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -41,6 +44,10 @@ export function middleware(request: NextRequest) {
     }
     return NextResponse.redirect(loginUrl);
   }
+
+  // Note: Role-based access is enforced at the page level since we can't
+  // query the database in Edge middleware. The portal layout handles
+  // redirects for non-members trying to access portal routes.
 
   return NextResponse.next();
 }

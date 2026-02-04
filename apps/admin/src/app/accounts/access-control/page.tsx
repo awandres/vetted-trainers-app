@@ -10,7 +10,6 @@ import {
   CardTitle,
   Button,
   Badge,
-  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -34,7 +33,9 @@ import {
   Loader2,
   UserX,
   Timer,
-  CalendarX,
+  AlertTriangle,
+  Play,
+  LogIn,
 } from "lucide-react";
 
 interface UserAccess {
@@ -45,6 +46,43 @@ interface UserAccess {
   accessDisabled: boolean | null;
   accessExpiresAt: string | null;
   accessDurationMinutes: number | null;
+  lastLoginAt: string | null;
+  lastLoginAttemptAt: string | null;
+}
+
+// Helper to format remaining time
+function formatTimeRemaining(expiresAt: string): { text: string; expired: boolean; urgent: boolean } {
+  const now = Date.now();
+  const expiry = new Date(expiresAt).getTime();
+  const diffMs = expiry - now;
+  
+  if (diffMs <= 0) {
+    return { text: "Expired", expired: true, urgent: false };
+  }
+  
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const remainingSeconds = diffSeconds % 60;
+  
+  if (diffMinutes >= 60) {
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+    return { text: `${hours}h ${mins}m remaining`, expired: false, urgent: false };
+  }
+  
+  if (diffMinutes > 0) {
+    return { 
+      text: `${diffMinutes}m ${remainingSeconds}s remaining`, 
+      expired: false, 
+      urgent: diffMinutes < 2 
+    };
+  }
+  
+  return { 
+    text: `${remainingSeconds}s remaining`, 
+    expired: false, 
+    urgent: true 
+  };
 }
 
 export default function AccessControlPage() {
@@ -53,6 +91,15 @@ export default function AccessControlPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [timeLimit, setTimeLimit] = useState("5");
+  const [now, setNow] = useState(Date.now());
+
+  // Update countdown every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -73,6 +120,9 @@ export default function AccessControlPage() {
 
   useEffect(() => {
     fetchUsers();
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchUsers, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleAction = async (userId: string, action: string, value?: string) => {
@@ -108,19 +158,63 @@ export default function AccessControlPage() {
 
   const getAccessStatus = (user: UserAccess) => {
     if (user.accessDisabled) {
-      return <Badge className="bg-red-500/10 text-red-400"><Ban className="h-3 w-3 mr-1" /> Disabled</Badge>;
+      return (
+        <div className="flex flex-col gap-1">
+          <Badge className="bg-red-500/10 text-red-400 w-fit">
+            <Ban className="h-3 w-3 mr-1" /> Disabled
+          </Badge>
+        </div>
+      );
     }
-    if (user.accessDurationMinutes) {
-      return <Badge className="bg-yellow-500/10 text-yellow-400"><Timer className="h-3 w-3 mr-1" /> {user.accessDurationMinutes}min limit</Badge>;
-    }
+    
+    // Check if there's an active time limit with expiry set
     if (user.accessExpiresAt) {
-      const expiry = new Date(user.accessExpiresAt);
-      if (expiry < new Date()) {
-        return <Badge className="bg-red-500/10 text-red-400"><CalendarX className="h-3 w-3 mr-1" /> Expired</Badge>;
+      const { text, expired, urgent } = formatTimeRemaining(user.accessExpiresAt);
+      
+      if (expired) {
+        return (
+          <div className="flex flex-col gap-1">
+            <Badge className="bg-red-500/10 text-red-400 w-fit">
+              <AlertTriangle className="h-3 w-3 mr-1" /> Time Expired
+            </Badge>
+            <span className="text-xs text-gray-500">
+              {user.accessDurationMinutes ? `Was ${user.accessDurationMinutes} min limit` : `Expired ${new Date(user.accessExpiresAt).toLocaleString()}`}
+            </span>
+          </div>
+        );
       }
-      return <Badge className="bg-yellow-500/10 text-yellow-400"><Clock className="h-3 w-3 mr-1" /> Expires {expiry.toLocaleDateString()}</Badge>;
+      
+      return (
+        <div className="flex flex-col gap-1">
+          <Badge className={urgent ? "bg-red-500/10 text-red-400 w-fit animate-pulse" : "bg-yellow-500/10 text-yellow-400 w-fit"}>
+            <Timer className="h-3 w-3 mr-1" /> {text}
+          </Badge>
+          <span className="text-xs text-gray-500">
+            {user.accessDurationMinutes ? `${user.accessDurationMinutes} min limit` : `Expires ${new Date(user.accessExpiresAt).toLocaleTimeString()}`}
+          </span>
+        </div>
+      );
     }
-    return <Badge className="bg-green-500/10 text-green-400"><Check className="h-3 w-3 mr-1" /> Active</Badge>;
+    
+    // Check for duration set but no expiry (legacy - needs to be re-set)
+    if (user.accessDurationMinutes) {
+      return (
+        <div className="flex flex-col gap-1">
+          <Badge className="bg-orange-500/10 text-orange-400 w-fit">
+            <Clock className="h-3 w-3 mr-1" /> {user.accessDurationMinutes} min limit
+          </Badge>
+          <span className="text-xs text-gray-500">
+            Timer not started - click Start Timer
+          </span>
+        </div>
+      );
+    }
+    
+    return (
+      <Badge className="bg-green-500/10 text-green-400 w-fit">
+        <Check className="h-3 w-3 mr-1" /> Active
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -158,7 +252,7 @@ export default function AccessControlPage() {
         <CardHeader>
           <CardTitle className="text-white">Quick Actions</CardTitle>
           <CardDescription className="text-gray-400">
-            Set up time-limited demo access for users
+            Set up time-limited demo access for users. Timer starts immediately when set.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -202,8 +296,8 @@ export default function AccessControlPage() {
               disabled={!selectedUser}
               className="bg-yellow-600 hover:bg-yellow-700"
             >
-              <Timer className="h-4 w-4 mr-2" />
-              Set Time Limit
+              <Play className="h-4 w-4 mr-2" />
+              Start Timer
             </Button>
             
             <Button
@@ -225,7 +319,7 @@ export default function AccessControlPage() {
             <div>
               <CardTitle className="text-white">All Users</CardTitle>
               <CardDescription className="text-gray-400">
-                {users.length} users
+                {users.length} users • Auto-refreshes every 30s
               </CardDescription>
             </div>
             <Button
@@ -246,6 +340,7 @@ export default function AccessControlPage() {
                 <TableHead className="text-gray-400">User</TableHead>
                 <TableHead className="text-gray-400">Role</TableHead>
                 <TableHead className="text-gray-400">Access Status</TableHead>
+                <TableHead className="text-gray-400">Last Login</TableHead>
                 <TableHead className="text-gray-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -261,8 +356,25 @@ export default function AccessControlPage() {
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>{getAccessStatus(user)}</TableCell>
                   <TableCell>
+                    <div className="flex flex-col gap-1 text-sm">
+                      {user.lastLoginAt ? (
+                        <div className="flex items-center gap-1 text-green-400">
+                          <LogIn className="h-3 w-3" />
+                          <span>{new Date(user.lastLoginAt).toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">Never logged in</span>
+                      )}
+                      {user.lastLoginAttemptAt && user.lastLoginAttemptAt !== user.lastLoginAt && (
+                        <div className="flex items-center gap-1 text-gray-500 text-xs">
+                          <span>Last attempt: {new Date(user.lastLoginAttemptAt).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     {user.role !== "super_admin" && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {user.accessDisabled ? (
                           <Button
                             size="sm"
@@ -285,13 +397,14 @@ export default function AccessControlPage() {
                           </Button>
                         )}
                         
-                        {user.accessDurationMinutes && (
+                        {(user.accessDurationMinutes || user.accessExpiresAt) && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleAction(user.id, "remove_time_limit")}
                             className="border-[#454850] text-gray-300"
                           >
+                            <Clock className="h-3 w-3 mr-1" />
                             Remove Limit
                           </Button>
                         )}

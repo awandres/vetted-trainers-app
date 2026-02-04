@@ -13,6 +13,9 @@ interface SidebarLayoutProps {
 // Pages where sidebar should be hidden
 const SIDEBAR_HIDDEN_PATHS = ["/login"];
 
+// Pages with their own layout (portal has its own sidebar)
+const CUSTOM_LAYOUT_PREFIXES = ["/portal"];
+
 export function SidebarLayout({ children }: SidebarLayoutProps) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
@@ -21,6 +24,9 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
 
   // Check if sidebar should be hidden on current path or if not authenticated
   const shouldHideSidebar = SIDEBAR_HIDDEN_PATHS.includes(pathname) || !isAuthenticated;
+  
+  // Check if page has its own layout (portal uses its own sidebar)
+  const hasCustomLayout = CUSTOM_LAYOUT_PREFIXES.some(prefix => pathname.startsWith(prefix));
 
   useEffect(() => {
     setMounted(true);
@@ -54,8 +60,8 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
     );
   }
 
-  // Hide sidebar on login page or when not authenticated
-  if (shouldHideSidebar) {
+  // Hide sidebar on login page, when not authenticated, or for portal routes (which have their own layout)
+  if (shouldHideSidebar || hasCustomLayout) {
     return (
       <div className="min-h-screen">
         {children}

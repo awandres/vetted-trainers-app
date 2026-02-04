@@ -7,9 +7,12 @@ A comprehensive monorepo for Vetted Trainers, featuring an admin dashboard, publ
 ```
 vetted-trainers-app/
 ├── apps/
-│   ├── admin/          # Admin dashboard + Website CMS (port 3000)
+│   ├── admin/          # Unified app: Admin + Trainer + Client Portal (port 3000)
+│   │   ├── /           # Admin/Trainer dashboard (role-based)
+│   │   ├── /portal/*   # Client member portal
+│   │   └── /login      # Universal login (redirects by role)
 │   ├── website/        # Public website (port 3001) - reads from DB
-│   └── client/         # Member portal scaffold (port 3002)
+│   └── client/         # [LEGACY] Standalone client portal (deprecated)
 ├── packages/
 │   ├── db/             # Drizzle ORM schemas & database client
 │   ├── auth/           # Better Auth configuration
@@ -19,6 +22,34 @@ vetted-trainers-app/
 ├── .env                # Environment variables
 └── R2_SETUP.md         # Cloudflare R2 setup guide
 ```
+
+## 🔀 Unified App Architecture
+
+The application is now consolidated into a single Next.js app (`apps/admin`) for easier deployment:
+
+| Role | Login Redirect | Available Routes |
+|------|---------------|------------------|
+| `super_admin` | `/` (Dashboard) | All admin routes |
+| `admin` | `/` (Dashboard) | All admin routes |
+| `trainer` | `/` (Dashboard) | Admin routes + trainer-specific views |
+| `member` | `/portal` | Portal routes only |
+
+### Route Structure
+```
+/login           → Universal login page
+/                → Admin dashboard (requires admin/trainer role)
+/portal          → Member dashboard
+/portal/sessions → Member session history
+/portal/prescriptions → Member prescriptions
+/portal/contract → Member contract view
+/portal/account  → Member account settings
+```
+
+### Benefits of Unified Architecture
+- ✅ **Single Vercel deployment** - One URL for everything
+- ✅ **No CORS issues** - Same-origin authentication
+- ✅ **Simpler maintenance** - One codebase to update
+- ✅ **Role-based routing** - Automatic redirect after login
 
 ## ✅ Features
 
@@ -76,16 +107,25 @@ vetted-trainers-app/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         MONOREPO FLOW                                │
+│                    UNIFIED APP ARCHITECTURE                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │   apps/admin (port 3000)           apps/website (port 3001)         │
 │   ┌─────────────────────┐         ┌─────────────────────┐          │
-│   │ Admin Dashboard     │         │ Public Website      │          │
-│   │ • KPI & Financials  │         │ • Reads PUBLISHED   │          │
-│   │ • Members/Trainers  │         │   content from DB   │          │
-│   │ • Website CMS       │         │ • Deployed to       │          │
-│   │ • PUBLISH → ────────┼────────►│   Vercel            │          │
+│   │ UNIFIED DASHBOARD   │         │ Public Website      │          │
+│   │                     │         │                     │          │
+│   │ /login → redirects  │         │ • Reads PUBLISHED   │          │
+│   │   ├─ admin/trainer  │         │   content from DB   │          │
+│   │   │   → /dashboard  │         │ • Deployed to       │          │
+│   │   └─ member         │         │   Vercel            │          │
+│   │       → /portal     │         │                     │          │
+│   │                     │         │                     │          │
+│   │ Routes:             │         │                     │          │
+│   │ • / (admin dash)    │────────►│                     │          │
+│   │ • /portal (member)  │ PUBLISH │                     │          │
+│   │ • /website (CMS)    │         │                     │          │
+│   │ • /marketing        │         │                     │          │
+│   │ • /members, etc.    │         │                     │          │
 │   └─────────────────────┘         └─────────────────────┘          │
 │            │                                ▲                       │
 │            │ Save/Publish                   │ Rebuild               │
@@ -95,17 +135,11 @@ vetted-trainers-app/
 │   │ • website_blocks (current)       │     │                       │
 │   │ • website_block_history (old)    │     │                       │
 │   │ • members, trainers, sessions    │     │                       │
+│   │ • users (role-based access)      │     │                       │
 │   └──────────────────────────────────┘     │                       │
 │            │                                │                       │
 │            └──── Vercel Deploy Hook ───────┘                       │
 │                                                                      │
-│   apps/client (port 3002)                                           │
-│   ┌─────────────────────┐                                          │
-│   │ Client Portal       │                                          │
-│   │ • Member login      │                                          │
-│   │ • View workouts     │                                          │
-│   │ • Track progress    │                                          │
-│   └─────────────────────┘                                          │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -229,17 +263,23 @@ pnpm seed         # Import data from CSV files
 | App | Port | URL | Description |
 |-----|------|-----|-------------|
 | Admin Dashboard | 3000 | `http://localhost:3000` | Main admin interface |
+| Client Portal | 3000 | `http://localhost:3000/portal` | Member portal (integrated) |
 | Website CMS | 3000 | `http://localhost:3000/website` | WYSIWYG editor |
 | Public Website | 3001 | `http://localhost:3001` | Production website |
-| Client Portal | 3002 | `http://localhost:3002` | Member portal |
+
+**Note:** The client portal is now integrated into the admin app. Members are automatically redirected to `/portal` after login.
 
 ## 🔑 Demo Accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Trainer | `demo-trainer@vettedtrainers.com` | `demo123!` |
+| Role | Email | Password | Notes |
+|------|-------|----------|-------|
+| Super Admin | `alex.r.wandres@gmail.com` | `tester123` | Full system access |
+| Admin | `joel@vettedtrainers.com` | `tester123` | Admin + linked to trainer |
+| Trainer | `joey@vettedtrainers.com` | `tester123` | Trainer with clients |
+| Trainer | `demo-trainer@vettedtrainers.com` | `demo123!` | Demo trainer |
+| Member | `demo-client@vettedtrainers.com` | `client123!` | Portal access only |
 
-*To create additional demo accounts, run `npx tsx scripts/seed-demo-trainer.ts`*
+*To create/reset demo accounts, run `npx tsx scripts/setup-demo-accounts.ts`*
 
 ## 🎨 Theme System
 
@@ -323,6 +363,10 @@ Themes persist in localStorage and apply instantly without page reload.
 - [ ] **Automated reminders** - Session reminders and follow-up notifications
 
 ### ✅ Recently Completed (Feb 4, 2026)
+- [x] **Unified App Architecture** - Consolidated admin, trainer, and client portals into single deployment
+- [x] **Role-Based Routing** - Automatic redirect after login based on user role
+- [x] **Integrated Portal** - Member portal accessible at `/portal` within admin app
+- [x] **Time-Limited Access** - Demo access control with automatic expiration
 - [x] **Automated Emails** - Trigger-based transactional emails (session booked, reminders, etc.)
 - [x] **Test Mode for Automated Emails** - Route emails to test addresses before going live
 - [x] **Send History Logs** - View last 50 triggered sends with status and test mode indicator

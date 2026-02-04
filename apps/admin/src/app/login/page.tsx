@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { signIn } from "@vt/auth/client";
 import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent } from "@vt/ui";
@@ -9,10 +9,14 @@ import { Loader2, Mail, Lock } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Get redirect URL from query params
+  const redirectUrl = searchParams.get("redirect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,15 +24,60 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // First, attempt sign in
       const result = await signIn.email({ email, password });
       if (result.error) {
+        // Track failed login attempt
+        await fetch("/api/auth/track-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, success: false }),
+        });
         setError(result.error.message || "Failed to sign in");
+        setLoading(false);
+        return;
+      }
+      
+      // Check if user has access (disabled/expired)
+      const accessCheck = await fetch("/api/auth/track-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, success: true }),
+      });
+      
+      const accessData = await accessCheck.json();
+      
+      if (!accessData.allowed) {
+        // User's access is revoked - sign them out and show message
+        await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
+        setError(accessData.message || "Access has timed out. Please contact system admin.");
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch user role to determine redirect
+      const sessionRes = await fetch("/api/auth/get-session", { credentials: "include" });
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        const userRole = sessionData?.user?.role || "member";
+        
+        // Redirect based on role
+        if (redirectUrl) {
+          // If there's a specific redirect, use it (unless it's a portal route and user isn't a member)
+          router.push(redirectUrl);
+        } else if (userRole === "member") {
+          // Members go to the portal
+          router.push("/portal");
+        } else {
+          // Admin, trainers, super_admin go to the dashboard
+          router.push("/");
+        }
       } else {
+        // Fallback: just go to home and let the page handle it
         router.push("/");
       }
     } catch (err) {
       setError("An unexpected error occurred");
-    } finally {
       setLoading(false);
     }
   };
@@ -43,15 +92,15 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
-              src="/images/vt/VT Logos/VT_Logo_white.png"
+              src="/images/vt/VT Logos/vetted-logo-white.png"
               alt="Vetted Trainers"
-              width={120}
-              height={120}
-              className="object-contain"
+              width={80}
+              height={80}
+              className="rounded-xl"
             />
           </div>
           <h1 className="text-2xl font-bold text-white">Vetted Trainers</h1>
-          <p className="text-gray-400">Admin Portal</p>
+          <p className="text-gray-400">Sign in to continue</p>
         </div>
 
         <Card className="bg-[#353840] border-[#454850]">
@@ -60,7 +109,7 @@ export default function LoginPage() {
               Welcome Back
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Sign in to access the dashboard
+              Sign in to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -14,15 +14,17 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_KEY = "vt-admin-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeVariant>("default");
+  // Default to VT Graphite theme
+  const [theme, setThemeState] = useState<ThemeVariant>("vt-graphite");
   const [mounted, setMounted] = useState(false);
 
-  // Load theme from localStorage on mount
+  // Load theme from localStorage on mount (or use default vt-graphite)
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY) as ThemeVariant | null;
     if (stored && ["default", "vt-blue", "vt-graphite"].includes(stored)) {
       setThemeState(stored);
     }
+    // If no stored theme, vt-graphite is already the default
     setMounted(true);
   }, []);
 

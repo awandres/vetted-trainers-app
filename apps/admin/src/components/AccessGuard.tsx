@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth";
-import { 
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Button,
-} from "@vt/ui";
+import { signOut } from "@vt/auth/client";
 
 interface AccessStatus {
   valid: boolean;
@@ -27,31 +18,36 @@ interface AccessStatus {
  * 
  * Silently enforces access controls:
  * - Checks access status every 30 seconds
- * - Auto-logs out when access is revoked (no warning shown)
+ * - Auto-logs out and redirects to access-expired page when access is revoked
  */
 export function AccessGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [showExpiredDialog, setShowExpiredDialog] = useState(false);
-  const [expiredMessage, setExpiredMessage] = useState("");
 
   const checkAccess = useCallback(async () => {
-    // Skip check on login page
-    if (pathname === "/login") return;
+    // Skip check on login page and access-expired page
+    if (pathname === "/login" || pathname === "/access-expired") return;
 
     try {
       const res = await fetch("/api/access-check", { credentials: "include" });
       const status: AccessStatus = await res.json();
 
       if (!status.valid) {
-        // Show a generic "session expired" message
-        setExpiredMessage("Your session has expired. Please log in again.");
-        setShowExpiredDialog(true);
+        // Sign out and redirect to access-expired page with reason
+        try {
+          await signOut();
+        } catch (e) {
+          // Ignore errors
+        }
+        
+        // Redirect to access-expired page with the reason
+        const reason = status.reason || "session_invalid";
+        router.push(`/access-expired?reason=${reason}`);
       }
     } catch (error) {
       console.error("Access check failed:", error);
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   // Check access on mount and periodically
   useEffect(() => {
@@ -63,36 +59,5 @@ export function AccessGuard({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [checkAccess]);
 
-  // Handle logout when access expires
-  const handleLogout = async () => {
-    try {
-      await authClient.signOut();
-    } catch (e) {
-      // Ignore errors
-    }
-    router.push("/login");
-  };
-
-  return (
-    <>
-      {children}
-
-      {/* Session expired dialog - shown when access is revoked */}
-      <AlertDialog open={showExpiredDialog}>
-        <AlertDialogContent className="bg-[#353840] border-[#454850]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Session Expired</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              {expiredMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button onClick={handleLogout} className="bg-[#3b82f6] hover:bg-[#2563eb]">
-              Return to Login
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+  return <>{children}</>;
 }

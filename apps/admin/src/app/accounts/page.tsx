@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
 import {
   ArrowLeft,
   Users,
@@ -60,12 +61,15 @@ interface Member {
 }
 
 export default function AccountsPage() {
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<"team" | "clients">("team");
   const [users, setUsers] = useState<User[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const isSuperAdmin = currentUser?.role === "super_admin";
 
   useEffect(() => {
     fetchData();
@@ -173,12 +177,14 @@ export default function AccountsPage() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
-              <Link href="/accounts/access-control">
-                <Button variant="outline">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Access Control
-                </Button>
-              </Link>
+              {isSuperAdmin && (
+                <Link href="/accounts/access-control">
+                  <Button variant="outline">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Access Control
+                  </Button>
+                </Link>
+              )}
               <Link href="/accounts/new">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

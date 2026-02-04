@@ -36,12 +36,14 @@ const themes: { value: ThemeVariant; label: string; description: string; preview
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
+  const currentTheme = themes.find(t => t.value === theme);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Button variant="ghost" size="sm" className="h-9 gap-2">
           <Palette className="h-4 w-4" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="hidden sm:inline text-sm">Theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

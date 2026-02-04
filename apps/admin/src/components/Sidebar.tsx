@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   Users,
   Dumbbell,
@@ -168,17 +169,25 @@ export function Sidebar() {
         >
           {!isCollapsed && (
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">VT</span>
-              </div>
+              <Image
+                src="/images/vt/VT Logos/vetted-logo-white.png"
+                alt="VT"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
               <span className="font-semibold text-sm">Vetted Trainers</span>
             </Link>
           )}
           {isCollapsed && (
             <Link href="/">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">VT</span>
-              </div>
+              <Image
+                src="/images/vt/VT Logos/vetted-logo-white.png"
+                alt="VT"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
             </Link>
           )}
         </div>

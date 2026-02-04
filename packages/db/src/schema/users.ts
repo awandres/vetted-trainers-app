@@ -40,6 +40,10 @@ export const users = pgTable("users", {
   // Flag to quickly disable access
   accessDisabled: boolean("access_disabled").default(false),
   
+  // Login tracking
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  lastLoginAttemptAt: timestamp("last_login_attempt_at", { withTimezone: true }),
+  
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),

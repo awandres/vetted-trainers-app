@@ -30,12 +30,12 @@ async function getAuthUser(request: NextRequest) {
   return user;
 }
 
-// GET - List users with access controls
+// GET - List users with access controls (super_admin only)
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser(request);
   
-  if (!authUser || (authUser.role !== "super_admin" && authUser.role !== "admin")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (!authUser || authUser.role !== "super_admin") {
+    return NextResponse.json({ error: "Unauthorized - Super Admin only" }, { status: 403 });
   }
 
   const allUsers = await db
@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
       accessDisabled: users.accessDisabled,
       accessExpiresAt: users.accessExpiresAt,
       accessDurationMinutes: users.accessDurationMinutes,
+      lastLoginAt: users.lastLoginAt,
+      lastLoginAttemptAt: users.lastLoginAttemptAt,
     })
     .from(users);
 
@@ -93,19 +95,27 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, message: "Access enabled" });
 
     case "set_time_limit":
-      // Set time limit in minutes (e.g., 5 for 5-minute demo)
+      // Set time limit in minutes - calculates expiry from NOW
       const minutes = parseInt(value) || 5;
+      const expiresAt = new Date(Date.now() + minutes * 60 * 1000);
       await db.update(users)
         .set({ 
           accessDurationMinutes: minutes,
+          accessExpiresAt: expiresAt,
           accessDisabled: false,
         })
         .where(eq(users.id, userId));
-      return NextResponse.json({ success: true, message: `Time limit set to ${minutes} minutes` });
+      return NextResponse.json({ 
+        success: true, 
+        message: `Time limit set to ${minutes} minutes (expires at ${expiresAt.toLocaleTimeString()})` 
+      });
 
     case "remove_time_limit":
       await db.update(users)
-        .set({ accessDurationMinutes: null })
+        .set({ 
+          accessDurationMinutes: null,
+          accessExpiresAt: null,
+        })
         .where(eq(users.id, userId));
       return NextResponse.json({ success: true, message: "Time limit removed" });
 
