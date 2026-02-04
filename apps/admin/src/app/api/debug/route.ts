@@ -16,8 +16,9 @@ export async function GET(request: NextRequest) {
     NODE_ENV: process.env.NODE_ENV,
   };
   
-  // Check cookies
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  // Check cookies (check both regular and __Secure- prefixed for production)
+  const sessionCookie = request.cookies.get("better-auth.session_token")
+    || request.cookies.get("__Secure-better-auth.session_token");
   checks.cookies = {
     sessionToken: sessionCookie ? `✅ Present (${sessionCookie.value.substring(0, 10)}...)` : "❌ Not set",
     allCookies: request.cookies.getAll().map(c => c.name),

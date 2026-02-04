@@ -3,8 +3,9 @@ import { db, vtMembers, vtTrainers, users, sessions, eq, and, gt } from "@vt/db"
 
 export async function GET(request: NextRequest) {
   try {
-    // Get session token from cookie
-    let sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    // Get session token from cookie (check both regular and __Secure- prefixed for production)
+    let sessionToken = request.cookies.get("better-auth.session_token")?.value
+      || request.cookies.get("__Secure-better-auth.session_token")?.value;
     
     if (!sessionToken) {
       return NextResponse.json({ error: "No session token" }, { status: 401 });

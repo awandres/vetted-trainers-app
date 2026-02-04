@@ -15,8 +15,9 @@ import { db, users, sessions, eq, and, gt } from "@vt/db";
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get session token
-    let sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    // Get session token (check both regular and __Secure- prefixed for production)
+    let sessionToken = request.cookies.get("better-auth.session_token")?.value
+      || request.cookies.get("__Secure-better-auth.session_token")?.value;
     
     if (!sessionToken) {
       return NextResponse.json({ valid: false, reason: "no_session" });
