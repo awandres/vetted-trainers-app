@@ -11,6 +11,7 @@
     "./globals.css": "./src/globals.css"
   },
   "scripts": {
+    "build": "echo 'Skipping build - using source via transpilePackages'",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {

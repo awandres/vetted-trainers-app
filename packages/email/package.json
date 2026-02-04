@@ -6,7 +6,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "dev": "email dev --port 3003",
-    "build": "tsc",
+    "build": "echo 'Skipping tsc build - using source via transpilePackages'",
     "preview": "email dev --port 3003"
   },
   "dependencies": {

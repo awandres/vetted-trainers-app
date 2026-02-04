@@ -18,6 +18,7 @@
     }
   },
   "scripts": {
+    "build": "echo 'Skipping build - using source via transpilePackages'",
     "db:generate": "dotenv -e ../../.env -- drizzle-kit generate",
     "db:migrate": "dotenv -e ../../.env -- drizzle-kit migrate",
     "db:push": "dotenv -e ../../.env -- drizzle-kit push",
