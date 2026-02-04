@@ -31,7 +31,7 @@ export const auth = betterAuth({
   // Email/password authentication
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: process.env.NODE_ENV === "production",
+    requireEmailVerification: false, // Disabled for demo - enable in production
   },
   
   // Session configuration
@@ -88,6 +88,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.BETTER_AUTH_URL,
     process.env.NEXT_PUBLIC_APP_URL,
+    // Vercel deployments
+    "https://vetted-trainers-app-admin.vercel.app",
     // Production domains
     "https://admin.vettedtrainers.com",
     "https://app.vettedtrainers.com",
@@ -102,13 +104,14 @@ export const auth = betterAuth({
   // Advanced configuration
   advanced: {
     generateId: () => crypto.randomUUID() as any,
-    // Use secure cookies only in production (HTTPS required)
+    // Use secure cookies in production (HTTPS required)
     useSecureCookies: process.env.NODE_ENV === "production",
-    // Use lax for same-origin development, none for cross-origin (requires HTTPS)
+    // Use lax for same-site requests
     cookieSameSite: "lax",
+    // Only enable cross-subdomain cookies for custom domain
     crossSubDomainCookies: {
-      enabled: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production" ? ".vettedtrainers.com" : undefined,
+      enabled: false, // Disabled for Vercel - enable when using custom domain
+      domain: undefined,
     },
   } as any,
 });
