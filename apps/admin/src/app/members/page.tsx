@@ -319,7 +319,13 @@ function AddMemberDialog({
 }
 
 // Alert Widget Component
-function AlertsWidget({ members }: { members: VTMember[] }) {
+function AlertsWidget({ 
+  members, 
+  onFilterChange 
+}: { 
+  members: VTMember[]; 
+  onFilterChange: (status: string) => void;
+}) {
   const inactiveMembers = members.filter((m) => m.status === "inactive");
   const churnedMembers = members.filter((m) => m.status === "churned");
 
@@ -351,7 +357,7 @@ function AlertsWidget({ members }: { members: VTMember[] }) {
                 size="sm"
                 variant="outline"
                 className="border-yellow-500/50 text-yellow-700 hover:bg-yellow-500/10"
-                onClick={() => handleStatusFilterChange("inactive")}
+                onClick={() => onFilterChange("inactive")}
               >
                 View
               </Button>
@@ -371,7 +377,7 @@ function AlertsWidget({ members }: { members: VTMember[] }) {
                 size="sm"
                 variant="outline"
                 className="border-red-500/50 text-red-700 hover:bg-red-500/10"
-                onClick={() => handleStatusFilterChange("churned")}
+                onClick={() => onFilterChange("churned")}
               >
                 View
               </Button>
@@ -542,7 +548,7 @@ export default function MembersPage() {
         </div>
 
         {/* Alerts Widget */}
-        <AlertsWidget members={members} />
+        <AlertsWidget members={members} onFilterChange={handleStatusFilterChange} />
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">

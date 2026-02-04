@@ -273,13 +273,15 @@ pnpm seed         # Import data from CSV files
 
 | Role | Email | Password | Notes |
 |------|-------|----------|-------|
-| Super Admin | `alex.r.wandres@gmail.com` | `tester123` | Full system access |
-| Admin | `joel@vettedtrainers.com` | `tester123` | Admin + linked to trainer |
-| Trainer | `joey@vettedtrainers.com` | `tester123` | Trainer with clients |
-| Trainer | `demo-trainer@vettedtrainers.com` | `demo123!` | Demo trainer |
-| Member | `demo-client@vettedtrainers.com` | `client123!` | Portal access only |
+| Super Admin | `alex.r.wandres@gmail.com` | `tester1234@` | Full system access |
+| Admin | `joel@vettedtrainers.com` | `tester123` | Admin + linked to Joel Arias trainer |
+| Trainer | `joey@vettedtrainers.com` | `joey444!` | Trainer with 5 active clients |
+| Trainer | `demo-trainer@vettedtrainers.com` | `bobdylan123` | Demo trainer |
+| Member | `demo-client@vettedtrainers.com` | `client100!` | Portal access only |
 
-*To create/reset demo accounts, run `npx tsx scripts/setup-demo-accounts.ts`*
+*All other accounts use password: `bobdylan123`*
+
+*To update passwords, run `npx tsx scripts/update-passwords.ts`*
 
 ## 🎨 Theme System
 
@@ -345,8 +347,8 @@ Themes persist in localStorage and apply instantly without page reload.
 ## 🚧 Remaining TODOs
 
 ### High Priority
+- [ ] **Trainer-Scoped Navigation** - Show trainer-specific menu when trainers login (members, sessions, contracts, exercises, prescriptions, payroll - all scoped to their clients only). Currently shows full admin menu.
 - [ ] **Configure R2** - Set up Cloudflare R2 for image uploads (see `R2_SETUP.md`)
-- [ ] **Deploy to Vercel** - Configure production environment variables
 - [ ] **Add member CRUD** - Create/edit/delete members in admin
 - [ ] **Add trainer CRUD** - Create/edit/delete trainers in admin
 
