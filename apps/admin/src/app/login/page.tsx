@@ -7,9 +7,9 @@ import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, Car
 import { Loader2, Mail, Lock, Shield, Dumbbell, User } from "lucide-react";
 
 const DEMO_ACCOUNTS = [
-  { email: "admin@demo-trainers.com", password: "demo123", label: "Admin", icon: Shield, description: "Full dashboard access" },
-  { email: "trainer@demo-trainers.com", password: "demo123", label: "Trainer", icon: Dumbbell, description: "Trainer dashboard" },
-  { email: "member@demo-trainers.com", password: "demo123", label: "Member", icon: User, description: "Client portal" },
+  { email: "admin@demo-trainers.com", password: "tester1234@", label: "Admin", icon: Shield, description: "Full dashboard access" },
+  { email: "trainer@demo-trainers.com", password: "tester1234@", label: "Trainer", icon: Dumbbell, description: "Trainer dashboard" },
+  { email: "member@demo-trainers.com", password: "tester1234@", label: "Member", icon: User, description: "Client portal" },
 ];
 
 export default function LoginPage() {

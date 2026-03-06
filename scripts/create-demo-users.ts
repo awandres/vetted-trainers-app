@@ -2,15 +2,27 @@
  * Create Demo Users Script
  * 
  * Creates demo user accounts directly in the database.
- * Uses bcrypt to hash passwords (same as Better Auth).
+ * Uses the same password hashing as Better Auth (scrypt).
  * 
  * Usage: npx tsx scripts/create-demo-users.ts
  */
 
-import { db, users, vtTrainers, vtMembers, eq, createId } from "@vt/db";
-import * as bcrypt from "bcryptjs";
+import { db, users, accounts, vtTrainers, vtMembers, eq, createId } from "@vt/db";
+import * as crypto from "crypto";
 
 const DEMO_PASSWORD = "demo123";
+
+// Better Auth uses scrypt for password hashing
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = await new Promise<Buffer>((resolve, reject) => {
+    crypto.scrypt(password, salt, 64, (err, key) => {
+      if (err) reject(err);
+      else resolve(key);
+    });
+  });
+  return `${salt}:${derivedKey.toString("hex")}`;
+}
 
 interface DemoUser {
   email: string;
@@ -30,7 +42,8 @@ async function createDemoUsers() {
   console.log("═".repeat(50));
   console.log(`\nPassword for all accounts: ${DEMO_PASSWORD}\n`);
 
-  const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const hashedPassword = await hashPassword(DEMO_PASSWORD);
+  console.log("Password hash generated\n");
 
   for (const demoUser of DEMO_USERS) {
     console.log(`\nProcessing: ${demoUser.email} (${demoUser.role})`);
@@ -40,23 +53,51 @@ async function createDemoUsers() {
     
     if (existingUser.length > 0) {
       console.log(`  User already exists, updating password and role...`);
+      const userId = existingUser[0].id;
       
       // Update existing user
       await db.update(users)
         .set({
           name: demoUser.name,
           role: demoUser.role,
-          hashedPassword,
           emailVerified: true,
           updatedAt: new Date(),
         })
-        .where(eq(users.id, existingUser[0].id));
+        .where(eq(users.id, userId));
+      
+      // Check if credential account exists
+      const existingAccount = await db.select().from(accounts)
+        .where(eq(accounts.userId, userId))
+        .limit(1);
+      
+      if (existingAccount.length > 0) {
+        // Update existing account password
+        await db.update(accounts)
+          .set({
+            password: hashedPassword,
+            updatedAt: new Date(),
+          })
+          .where(eq(accounts.id, existingAccount[0].id));
+        console.log(`  Updated password in accounts table`);
+      } else {
+        // Create new credential account
+        await db.insert(accounts).values({
+          id: createId(),
+          userId,
+          accountId: userId,
+          providerId: "credential",
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        console.log(`  Created credential account`);
+      }
       
       // Link trainer/member if needed
       if (demoUser.role === "trainer" && !existingUser[0].trainerId) {
         const trainer = await db.select().from(vtTrainers).where(eq(vtTrainers.email, "trainer@demo.test")).limit(1);
         if (trainer.length > 0) {
-          await db.update(users).set({ trainerId: trainer[0].id }).where(eq(users.id, existingUser[0].id));
+          await db.update(users).set({ trainerId: trainer[0].id }).where(eq(users.id, userId));
           console.log(`  Linked to trainer record`);
         }
       }
@@ -64,7 +105,7 @@ async function createDemoUsers() {
       if (demoUser.role === "member" && !existingUser[0].memberId) {
         const member = await db.select().from(vtMembers).where(eq(vtMembers.email, "member@demo.test")).limit(1);
         if (member.length > 0) {
-          await db.update(users).set({ memberId: member[0].id }).where(eq(users.id, existingUser[0].id));
+          await db.update(users).set({ memberId: member[0].id }).where(eq(users.id, userId));
           console.log(`  Linked to member record`);
         }
       }
@@ -128,7 +169,6 @@ async function createDemoUsers() {
         email: demoUser.email,
         name: demoUser.name,
         role: demoUser.role,
-        hashedPassword,
         emailVerified: true,
         trainerId,
         memberId,
@@ -136,7 +176,18 @@ async function createDemoUsers() {
         updatedAt: new Date(),
       });
 
-      console.log(`  ✅ Created ${demoUser.email}`);
+      // Create credential account for Better Auth
+      await db.insert(accounts).values({
+        id: createId(),
+        userId,
+        accountId: userId,
+        providerId: "credential",
+        password: hashedPassword,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      console.log(`  ✅ Created ${demoUser.email} with credential account`);
     }
   }
 
