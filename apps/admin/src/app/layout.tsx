@@ -10,8 +10,8 @@ import { AccessGuard } from "@/components/AccessGuard";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Vetted Trainers Admin",
-  description: "Admin portal for Vetted Trainers gym management",
+  title: "Personal Trainers Admin",
+  description: "Admin portal for personal training gym management",
 };
 
 export default function RootLayout({

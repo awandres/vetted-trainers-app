@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { signIn } from "@vt/auth/client";
 import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent } from "@vt/ui";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock, Shield, Dumbbell, User } from "lucide-react";
+
+const DEMO_ACCOUNTS = [
+  { email: "admin@demo-trainers.com", password: "demo123", label: "Admin", icon: Shield, description: "Full dashboard access" },
+  { email: "trainer@demo-trainers.com", password: "demo123", label: "Trainer", icon: Dumbbell, description: "Trainer dashboard" },
+  { email: "member@demo-trainers.com", password: "demo123", label: "Member", icon: User, description: "Client portal" },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +19,51 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
+
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
+    setDemoLoading(demoEmail);
+    setError("");
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    
+    try {
+      const result = await signIn.email({ email: demoEmail, password: demoPassword });
+      if (result.error) {
+        setError(result.error.message || "Demo login failed. Please run: npx tsx scripts/seed-demo-accounts.ts");
+        setDemoLoading(null);
+        return;
+      }
+      
+      const accessCheck = await fetch("/api/auth/track-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: demoEmail, success: true }),
+      });
+      
+      const accessData = await accessCheck.json();
+      
+      if (!accessData.allowed) {
+        await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
+        setError(accessData.message || "Access has timed out.");
+        setDemoLoading(null);
+        return;
+      }
+      
+      const sessionRes = await fetch("/api/auth/get-session", { credentials: "include" });
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        const userRole = sessionData?.user?.role || "member";
+        window.location.href = userRole === "member" ? "/portal" : "/";
+      } else {
+        window.location.href = "/";
+      }
+    } catch (err) {
+      console.error("Demo login error:", err);
+      setError("Demo login failed");
+      setDemoLoading(null);
+    }
+  };
 
   // Get redirect URL from query params
   const redirectUrl = searchParams.get("redirect");
@@ -91,15 +141,11 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <Image
-              src="/images/vt/VT Logos/vetted-logo-white.png"
-              alt="Vetted Trainers"
-              width={80}
-              height={80}
-              className="rounded-xl"
-            />
+            <div className="h-20 w-20 rounded-xl bg-[#3b82f6] flex items-center justify-center">
+              <span className="text-white font-bold text-3xl">PT</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">Vetted Trainers</h1>
+          <h1 className="text-2xl font-bold text-white">Personal Trainers</h1>
           <p className="text-gray-400">Sign in to continue</p>
         </div>
 
@@ -167,11 +213,38 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            {/* Demo Account Quick Access */}
+            <div className="mt-6 pt-6 border-t border-[#454850]">
+              <p className="text-xs text-gray-500 text-center mb-3">Quick Demo Access</p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEMO_ACCOUNTS.map((account) => {
+                  const Icon = account.icon;
+                  const isLoading = demoLoading === account.email;
+                  return (
+                    <button
+                      key={account.email}
+                      type="button"
+                      onClick={() => handleDemoLogin(account.email, account.password)}
+                      disabled={loading || demoLoading !== null}
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-[#454850] hover:border-[#3b82f6] hover:bg-[#2a2d36] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 text-[#3b82f6] animate-spin" />
+                      ) : (
+                        <Icon className="h-5 w-5 text-gray-400" />
+                      )}
+                      <span className="text-xs font-medium text-gray-300">{account.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-gray-500 mt-8">
-          © {new Date().getFullYear()} Vetted Trainers. All rights reserved.
+          © {new Date().getFullYear()} Personal Trainers. All rights reserved.
         </p>
       </div>
     </div>

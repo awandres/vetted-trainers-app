@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vt/ui";
 import { ShieldX, Mail, ArrowRight } from "lucide-react";
 import { signOut } from "@vt/auth/client";
@@ -47,15 +46,11 @@ export default function AccessExpiredPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <Image
-              src="/images/vt/VT Logos/vetted-logo-white.png"
-              alt="Vetted Trainers"
-              width={80}
-              height={80}
-              className="object-contain rounded-lg"
-            />
+            <div className="h-20 w-20 rounded-xl bg-[#3b82f6] flex items-center justify-center">
+              <span className="text-white font-bold text-3xl">PT</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">Vetted Trainers</h1>
+          <h1 className="text-2xl font-bold text-white">Personal Trainers</h1>
         </div>
 
         <Card className="bg-[#353840] border-[#454850]">
@@ -76,10 +71,10 @@ export default function AccessExpiredPage() {
                   <div>
                     <p className="text-gray-400">Contact support:</p>
                     <a 
-                      href="mailto:admin@vettedtrainers.com" 
+                      href="mailto:admin@demo-trainers.com" 
                       className="text-[#50BFF4] hover:underline"
                     >
-                      admin@vettedtrainers.com
+                      admin@demo-trainers.com
                     </a>
                   </div>
                 </div>
@@ -97,7 +92,7 @@ export default function AccessExpiredPage() {
         </Card>
 
         <p className="text-center text-gray-500 text-sm mt-6">
-          © {new Date().getFullYear()} Vetted Trainers. All rights reserved.
+          © {new Date().getFullYear()} Personal Trainers. All rights reserved.
         </p>
       </div>
     </div>

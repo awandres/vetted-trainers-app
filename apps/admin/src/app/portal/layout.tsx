@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@vt/ui";
 import {
   Home,
@@ -116,16 +115,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           "flex items-center h-16 px-4 border-b border-[#454850]",
           isCollapsed ? "justify-center" : "gap-3"
         )}>
-          <Image
-            src="/images/vt/VT Logos/vetted-logo-white.png"
-            alt="Vetted Trainers"
-            width={32}
-            height={32}
-            className="flex-shrink-0"
-          />
+          <div className="h-8 w-8 rounded-lg bg-[#3b82f6] flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm">PT</span>
+          </div>
           {!isCollapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-sm font-bold text-white truncate">Vetted Trainers</h1>
+              <h1 className="text-sm font-bold text-white truncate">Personal Trainers</h1>
               <p className="text-xs text-gray-400 truncate">Member Portal</p>
             </div>
           )}

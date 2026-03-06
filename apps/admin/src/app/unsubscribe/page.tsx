@@ -19,14 +19,14 @@ export default function UnsubscribePage() {
             <h1 className="text-2xl font-bold mb-2">Unsubscribed</h1>
             <p className="text-muted-foreground mb-6">
               You have been successfully unsubscribed from marketing emails.
-              You will no longer receive promotional messages from Vetted Trainers.
+              You will no longer receive promotional messages from Personal Trainers.
             </p>
             <p className="text-sm text-muted-foreground mb-6">
               Note: You may still receive transactional emails related to your account,
               such as session reminders and prescription notifications.
             </p>
-            <Link href="https://vettedtrainers.com">
-              <Button variant="outline">Return to Website</Button>
+            <Link href="/">
+              <Button variant="outline">Return to Home</Button>
             </Link>
           </CardContent>
         </Card>
@@ -45,8 +45,8 @@ export default function UnsubscribePage() {
               This unsubscribe link appears to be invalid or expired.
               Please try clicking the link in your email again.
             </p>
-            <Link href="https://vettedtrainers.com">
-              <Button variant="outline">Return to Website</Button>
+            <Link href="/">
+              <Button variant="outline">Return to Home</Button>
             </Link>
           </CardContent>
         </Card>
@@ -63,10 +63,10 @@ export default function UnsubscribePage() {
             <h1 className="text-2xl font-bold mb-2">Something Went Wrong</h1>
             <p className="text-muted-foreground mb-6">
               We couldn't process your unsubscribe request. Please try again
-              or contact us at support@vettedtrainers.com.
+              or contact us at support@demo-trainers.com.
             </p>
-            <Link href="https://vettedtrainers.com">
-              <Button variant="outline">Return to Website</Button>
+            <Link href="/">
+              <Button variant="outline">Return to Home</Button>
             </Link>
           </CardContent>
         </Card>
@@ -82,10 +82,10 @@ export default function UnsubscribePage() {
           <h1 className="text-2xl font-bold mb-2">Email Preferences</h1>
           <p className="text-muted-foreground mb-6">
             If you received this page in error, please contact us at
-            support@vettedtrainers.com for assistance with your email preferences.
+            support@demo-trainers.com for assistance with your email preferences.
           </p>
-          <Link href="https://vettedtrainers.com">
-            <Button variant="outline">Return to Website</Button>
+          <Link href="/">
+            <Button variant="outline">Return to Home</Button>
           </Link>
         </CardContent>
       </Card>

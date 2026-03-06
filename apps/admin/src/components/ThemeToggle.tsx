@@ -21,14 +21,14 @@ const themes: { value: ThemeVariant; label: string; description: string; preview
   },
   {
     value: "vt-blue",
-    label: "VT Blue",
-    description: "Light theme with VT cyan blue",
+    label: "Blue",
+    description: "Light theme with cyan blue accents",
     preview: "bg-[#50BFF4]",
   },
   {
     value: "vt-graphite",
-    label: "VT Graphite",
-    description: "Dark graphite with VT cyan blue",
+    label: "Graphite",
+    description: "Dark graphite with cyan blue accents",
     preview: "bg-gradient-to-r from-[#1e2329] to-[#50BFF4]",
   },
 ];

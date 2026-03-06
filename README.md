@@ -1,6 +1,6 @@
-# Vetted Trainers App
+# Personal Trainers App
 
-A comprehensive monorepo for Vetted Trainers, featuring an admin dashboard, public website with CMS capabilities, and client portal.
+A comprehensive monorepo for personal training businesses, featuring an admin dashboard, public website with CMS capabilities, and client portal.
 
 ## 🏗️ Project Structure
 
@@ -271,17 +271,25 @@ pnpm seed         # Import data from CSV files
 
 ## 🔑 Demo Accounts
 
-| Role | Email | Password | Notes |
-|------|-------|----------|-------|
-| Super Admin | `alex.r.wandres@gmail.com` | `tester1234@` | Full system access |
-| Admin | `joel@vettedtrainers.com` | `tester123` | Admin + linked to Joel Arias trainer |
-| Trainer | `joey@vettedtrainers.com` | `joey444!` | Trainer with 5 active clients |
-| Trainer | `demo-trainer@vettedtrainers.com` | `bobdylan123` | Demo trainer |
-| Member | `demo-client@vettedtrainers.com` | `client100!` | Portal access only |
+The login page includes quick-access buttons for demo accounts. All demo accounts use password: `demo123`
 
-*All other accounts use password: `bobdylan123`*
+| Role | Email | Password | Access |
+|------|-------|----------|--------|
+| Admin | `admin@demo-trainers.com` | `demo123` | Full dashboard access |
+| Trainer | `trainer@demo-trainers.com` | `demo123` | Trainer dashboard with sample clients |
+| Member | `member@demo-trainers.com` | `demo123` | Client portal with sessions & prescriptions |
 
-*To update passwords, run `npx tsx scripts/update-passwords.ts`*
+### Setting Up Demo Accounts
+
+```bash
+# Start the dev server first
+pnpm dev
+
+# In a separate terminal, seed the demo accounts
+npx tsx scripts/seed-demo-accounts.ts
+```
+
+This creates all three demo accounts with linked trainer/member records and sample data.
 
 ## 🎨 Theme System
 
@@ -289,9 +297,9 @@ The admin dashboard includes a theme toggle (palette icon in header) with 3 opti
 
 | Theme | Description |
 |-------|-------------|
-| **Classic Green** | Light theme with green accents (default) |
-| **VT Blue** | Light theme with VT cyan blue (#50BFF4) |
-| **VT Graphite** | Dark graphite background with VT cyan blue |
+| **Classic Green** | Light theme with green accents |
+| **Blue** | Light theme with cyan blue accents |
+| **Graphite** | Dark graphite background with cyan blue (default) |
 
 Themes persist in localStorage and apply instantly without page reload.
 

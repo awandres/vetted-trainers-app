@@ -25,7 +25,6 @@ import {
   AlertTriangle,
   CalendarClock,
 } from "lucide-react";
-import Image from "next/image";
 
 interface Prescription {
   id: string;
@@ -125,13 +124,9 @@ export default function PortalDashboard() {
   if (!member && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <Image
-          src="/images/vt/VT_Logo_white.png"
-          alt="Vetted Trainers Logo"
-          width={100}
-          height={100}
-          className="mx-auto mb-6"
-        />
+        <div className="h-24 w-24 rounded-xl bg-[#3b82f6] flex items-center justify-center mx-auto mb-6">
+          <span className="text-white font-bold text-4xl">PT</span>
+        </div>
         <Card className="w-full max-w-md bg-[#353840] border-[#454850]">
           <CardHeader>
             <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
